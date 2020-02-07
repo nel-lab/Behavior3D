@@ -14,19 +14,24 @@ import numpy as np
 import shutil
 import os
 import cv2
+from datetime import date
     
-path = '/home/nel-lab/Desktop/Locomotion'
+path = '/home/nel-lab/Desktop/Behavior3D'
 rootDirectory = path
-#rootDirectory = 'where your video is'
+# rootDirectory = 'where your video is'
 os.chdir(rootDirectory)
 
 #%% if you have npz files for each camera that you would like to convert to 
 #   a video or get individual images of each frame, use this cell and modify 
 #   takes to match the number of views you have 
 
-fps=70 
-takes = 2
-video_name = 'mouse_5_12_9_2019_120_LARGE_habituationvideomovie'
+fps = 70 
+takes = 3
+animal = 'mouse_5_'
+video_name = animal + str(date.today()).replace('-', '_') + '_120_LARGE_habituationvideomovie'
+print(video_name)
+
+#%%
 
 for i in range(takes): 
     video_name = video_name
