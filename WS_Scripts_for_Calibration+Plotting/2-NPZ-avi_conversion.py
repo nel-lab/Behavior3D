@@ -15,7 +15,7 @@ import shutil
 import os
 import cv2
     
-path = '/home/nel-lab/Desktop/Cynthia'
+path = '/home/nel-lab/Desktop/Locomotion'
 rootDirectory = path
 #rootDirectory = 'where your video is'
 os.chdir(rootDirectory)
@@ -25,8 +25,8 @@ os.chdir(rootDirectory)
 #   takes to match the number of views you have 
 
 fps=70 
-takes = 3
-video_name = 'mov_recal_3_cam_'
+takes = 2
+video_name = 'mouse_5_12_9_2019_120_LARGE_habituationvideomovie'
 
 for i in range(takes): 
     video_name = video_name

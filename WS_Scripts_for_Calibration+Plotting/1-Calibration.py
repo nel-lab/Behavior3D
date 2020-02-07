@@ -31,62 +31,43 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os 
 
-path = '/home/nel-lab/Desktop/Cynthia'
+path = '/home/nel-lab/Desktop/Behavior3D'
 os.chdir(path)
 
 # initialize all connected cameras
-#%%
-c = Camera([0, 1, 2], fps=[70,70,70], resolution=[Camera.RES_LARGE, Camera.RES_LARGE, Camera.RES_LARGE], colour=[False, False, False])
+#%% input number of cameras
+num_cameras = 3
+c = Camera(list(range(3)), fps=[70]*num_cameras, resolution=[Camera.RES_LARGE]*num_cameras, colour=[False]*num_cameras)
 
 #%% display movies
 d = Display(c)
 
-#%%
-# when finished, close the camera
-c.end()
+#%% when finished, close the camera
+d.end()
 
-#%%
+#%% initializes movie
 frames, timestamps = c.read()
-num_cameras = len(frames)
 frame_size = frames[0].shape
 num_frames = 10
 mov = np.zeros([num_frames, num_cameras, frame_size[0], frame_size[1]], dtype=np.uint8)
 
 #%%
-i = 0
-#%%
-i = i + 1
-#%%
-
-if i<num_frames:
+for i in range(num_frames): 
+    frames, timestamps = c.read()
     frames, timestamps = c.read()
     mov[i] = np.array(frames)
     plt.imshow(mov[i,1,:,:])
-    plt.title(str(i))
-    
-if i<num_frames:
-    frames, timestamps = c.read()
-    mov[i] = np.array(frames)
-    plt.imshow(mov[i,1,:,:])
-    plt.title(str(i))
+    plt.title("Calibration point " + str(i))
+    plt.pause(0.001)
+    input("Press enter to view image")
 
 #%% Check each camera below - note the order if you haven't already
-    # Camera order: 
-#%%
-plt.imshow(mov[i,0,:,:])
-plt.title(str(i))
-                                         #%%
-plt.imshow(mov[i,1,:,:])
-plt.title(str(i))
-#%%
-plt.imshow(mov[i,2,:,:])
-plt.title(str(i))
-#%%
-plt.imshow(mov[i,3,:,:])
-plt.title(str(i))
-#%%
-plt.imshow(mov[i,4,:,:])
-plt.title(str(i))
+    # Type camera order here: 
+for camera in range(num_cameras):
+    plt.imshow(mov[i,camera,:,:])
+    plt.title("Camera " + str(camera)+", Image " + str(i))    
+    plt.pause(0.001)
+    input("Press enter to continue")
 
 #%%
 base_name = 'recal_3_cam_'
