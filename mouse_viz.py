@@ -3,13 +3,12 @@ import numpy as np
 
 
 def getVideosTop():
-    fl = cv2.VideoCapture('front_right_Dec17.mp4')
-    bot = cv2.VideoCapture('bot_all_paws_Jan24.mp4')
-    fr = cv2.VideoCapture('front_right_Dec17.mp4')
-    bl = cv2.VideoCapture('front_right_Dec17.mp4')
-    br = cv2.VideoCapture('back_right_Jan23.mp4')
+    fl = cv2.VideoCapture('vids/fr_Dec17.mp4')
+    bot = cv2.VideoCapture('vids/bot_all_paws_Jan24.mp4')
+    fr = cv2.VideoCapture('vids/fr_Dec17.mp4')
+    bl = cv2.VideoCapture('vids/fr_Dec17.mp4')
+    br = cv2.VideoCapture('vids/back_right_Jan23.mp4')
 
-    print(bot.get(cv2.CAP_PROP_FRAME_COUNT))
     videos = [fl, bot, fr, bl, br]
 
     if not fl.isOpened():
@@ -21,7 +20,6 @@ def getVideosTop():
         ret_fr, frame_fr = fr.read()
         ret_bl, frame_bl = bl.read()
         ret_br, frame_br = br.read()
-        print(frame_fl.shape, frame_bot.shape, frame_br.shape)
         blank_image = np.zeros(shape=frame_fl.shape, dtype=np.uint8)
         if ret_fl:
             top = np.concatenate((frame_fl, frame_bot, frame_fr), axis=1)
