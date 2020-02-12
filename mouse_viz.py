@@ -28,6 +28,7 @@ def getVideosTop():
             bottom = np.concatenate((frame_bl, blank_image, frame_br), axis=1)
             final = np.concatenate((top, bottom), axis=0)
             cv2.imshow("Frame", final)
+            
             if cv2.waitKey(25) & 0xFF == ord('q'):
                 break
         else:
