@@ -8,6 +8,7 @@ import time
 def showVideo(q):
     # f = q.get()[0]
     print(q.empty())
+    cv2.startWindowThread()
 
     while True:
         top = q.get()
@@ -17,21 +18,23 @@ def showVideo(q):
             frame, timestamp = top
             img = np.uint8(frame)
             cv2.imshow("display", img)
-            cv2.waitKey(14)
+            cv2.waitKey(15)
     cv2.destroyAllWindows
+    cv2.waitKey(1)
 
     print("window destroyed")
 
 
-def getVideo(q):
-    c = Camera([0, 1], fps=[70, 70], resolution=Camera.RES_LARGE, colour=False)
+def getVideo(q1, q2):
+    c = Camera(0, fps=70, resolution=Camera.RES_LARGE, colour=False)
     print("opened camera")
 
-    for t in range(500):
+    for t in range(100):
         frame, timestamp = c.read()
-        q.put((frame, timestamp))
-        print("put in q")
-    q.put("END")
+        q1.put((frame, timestamp))
+        q2.put((frame, timestamp))
+    q1.put("END")
+    q2.put("END")
     c.end()
 
 
@@ -39,22 +42,29 @@ def getVideo(q):
 if __name__ == "__main__":
 
     c = Camera(0, fps=70, resolution=Camera.RES_LARGE, colour=False)
-    q = mp.Queue()
+    q1 = mp.Queue()
+    q2 = mp.Queue()
     first = c.read()
     c.end()
-    q.put(first)
-    print(q.qsize())
+    q1.put(first)
+    q2.put(first)
+    print(q1.qsize())
 
-    pget = mp.Process(target=getVideo, args=(q, ))
-    pshow = mp.Process(target=showVideo, args=(q, ))
+    pget = mp.Process(target=getVideo, args=(q1, q2, ))
+    # pget2 = mp.Process(target=getVideo, args=(q2, ))
+    pshow = mp.Process(target=showVideo, args=(q1, ))
+    pshow2 = mp.Process(target=showVideo, args=(q2, ))
     
     pget.start()
+    # pget2.start()
 
     pshow.start()
+    pshow2.start()
 
     print("waiting")
     pget.join()
+    # pget2.join()
     print("joined1")
     pshow.join()
+    pshow2.join()
     print("joined2")
-    
