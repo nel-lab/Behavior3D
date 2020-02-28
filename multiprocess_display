@@ -1,0 +1,60 @@
+import numpy as np
+import cv2
+from pseyepy import Camera, Display
+from PIL import Image
+import multiprocessing as mp
+import time
+
+def showVideo(q):
+    # f = q.get()[0]
+    print(q.empty())
+
+    while True:
+        top = q.get()
+        if top == 'END':
+            break
+        else:
+            frame, timestamp = top
+            img = np.uint8(frame)
+            cv2.imshow("display", img)
+            cv2.waitKey(14)
+    cv2.destroyAllWindows
+
+    print("window destroyed")
+
+
+def getVideo(q):
+    c = Camera([0, 1], fps=[70, 70], resolution=Camera.RES_LARGE, colour=False)
+    print("opened camera")
+
+    for t in range(500):
+        frame, timestamp = c.read()
+        q.put((frame, timestamp))
+        print("put in q")
+    q.put("END")
+    c.end()
+
+
+
+if __name__ == "__main__":
+
+    c = Camera(0, fps=70, resolution=Camera.RES_LARGE, colour=False)
+    q = mp.Queue()
+    first = c.read()
+    c.end()
+    q.put(first)
+    print(q.qsize())
+
+    pget = mp.Process(target=getVideo, args=(q, ))
+    pshow = mp.Process(target=showVideo, args=(q, ))
+    
+    pget.start()
+
+    pshow.start()
+
+    print("waiting")
+    pget.join()
+    print("joined1")
+    pshow.join()
+    print("joined2")
+    
