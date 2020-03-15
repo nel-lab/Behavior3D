@@ -7,6 +7,7 @@ import multiprocessing as mp
 import tifffile as tf
 import os
 from datetime import datetime
+import time as time
 import socket
 import csv
 
@@ -19,7 +20,7 @@ def showVideo(q_list, folder_name):
     for i in range(num_cams):
         os.mkdir("./images/"+folder_name+"/"+str(i))
 
-    cv2.startWindowThread() # starts display window
+    # cv2.startWindowThread() # starts display window
 
     q_closed = 0
     while True:
@@ -33,18 +34,12 @@ def showVideo(q_list, folder_name):
                 name = "./images/"+folder_name+"/"+str(j)+"/"+ str(timestamp) + ".tif"
 
                 # cv2.imshow("display"+str(j), frame)
-                frames.append(frame)
-                cv2.waitKey(1)
+                # frames.append(frame)
+                #cv2.waitKey(1)
 
                 tf.imwrite(name, frame, timestamp) # writes output with timestamp
         if q_closed == num_cams:
             break
-        else:
-            frame = cv2.hconcat(frames)
-            cv2.imshow("display", frame)
-
-    cv2.destroyAllWindows # closes display
-
     print("window destroyed")
 
 
@@ -64,23 +59,50 @@ def getVideo(q_list):
         q_list[j].put("END") # end signal
     c.end()
 
-def listenTCPIP(q):
-    TCP_IP = "152.2.175.30"
-    TCP_PORT = 8888
+def listenTCPIP(q_list, folder_name):
+    TCP_IP = "152.2.174.197"
+    TCP_PORT = 12345
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.send(b"foo")
-    s.connect((TCP_IP, TCP_PORT))
-    print("socket created\n")
-    f = open("log.csv", "a")
+    serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serverSocket.bind(("", TCP_PORT))
+#    serverSocket.connect(("", TCP_PORT))
+
+    serverSocket.listen()
+
+    clientSocket, clientAddress = serverSocket.accept()
+    clientSocket.settimeout(10.0)
+    print('Connected by', clientAddress)
+
+    f = open("./images/"+folder_name+"/times.csv", "a")
     writer = csv.writer(f, delimiter=',', quotechar='"')
 
-    while q.empty():
-        msg = s.recv()
-        if len(msg) > 0:
-            writer.writerow([datetime.now(), msg])
+    chunks = bytearray(4)
+    count = 0
+    while q_list[-1].empty():
+        bytes_recvd = 0
+        try:       
+            while bytes_recvd < 4:
+                chunk = clientSocket.recv(min(8 - bytes_recvd, 2048))
+                t = time.time()
+                chunks[bytes_recvd:bytes_recvd+len(chunk)] = chunk
+                bytes_recvd += len(chunk)
+            
+            number = np.frombuffer(chunks,dtype='<u2')
+            if count%100 == 0:
+                print(number)
+            writer.writerow([t, number])
+            count += 1
+        except socket.timeout:
+            print("timed out")
+    print(q_list[-1].empty())
+
+    # while q.empty():
+        # msg = serverSocket.recv()
+        # if len(msg) > 0:
+            # writer.writerow([datetime.now(), msg])
     f.close()
-    s.close()
+    clientSocket.close()
+    serverSocket.close()
 
     print("exited listenTCPIP process")
 
@@ -140,7 +162,7 @@ if __name__ == "__main__":
 
     pget = mp.Process(target=getVideo, args=(q_list,))
     pshow = mp.Process(target=showVideo, args=(q_list, folder_name, ))
-    ptcpip = mp.Process(target=listenTCPIP, args=(q_list[-1], ))
+    ptcpip = mp.Process(target=listenTCPIP, args=(q_list, folder_name, ))
     # plabjack = mp.Process(target=getLabjack, args=(q_list[-1], ))
     
     # plabjack.start()
