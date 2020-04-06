@@ -10,13 +10,12 @@ from datetime import datetime
 import time as time
 import socket
 import csv
+from copy import deepcopy
 
-def showVideo(q_list, folder_name):
-    num_cams = len(q_list)-1
-    try:
-        os.mkdir("./images/"+folder_name+"/") # sets up folder for imaging results
-    except:
-        os.mkdir("./images/"+folder_name+"duplicate/")
+def showVideo(q_list, num_cams, folder_name):
+
+    os.mkdir("./images/"+folder_name+"/") # sets up folder for imaging results
+    
     for i in range(num_cams):
         os.mkdir("./images/"+folder_name+"/"+str(i))
 
@@ -25,76 +24,89 @@ def showVideo(q_list, folder_name):
     q_closed = 0
     while True:
         frames = []
-        for j in range(num_cams):
-            top = q_list[j].get()
+        try:
+            top = q_list[0].get()
             if top == 'END': # end signal from queue
-                q_closed += 1
-            else:
-                frame, timestamp = top # pull first frame off of queue
-                name = "./images/"+folder_name+"/"+str(j)+"/"+ str(timestamp) + ".tif"
+                break
+            frames, timestamp = top # pull first frame off of queue
+            for j in range(num_cams):
+                name = "./images/"+folder_name+"/"+str(j)+"/"+ str(timestamp[j]) + ".tif"
 
-                # cv2.imshow("display"+str(j), frame)
-                # frames.append(frame)
-                #cv2.waitKey(1)
+                    # cv2.imshow("display"+str(j), frame)
+                    # frames.append(frame)
+                    #cv2.waitKey(1)
 
-                tf.imwrite(name, frame, timestamp) # writes output with timestamp
-        if q_closed == num_cams:
-            break
+                tf.imwrite(name, frames[j], timestamp[j]) # writes output with timestamp
+        except:
+            pass
+    print(q_list[0].qsize(), "show queue left over")
     print("window destroyed")
 
 
-def getVideo(q_list):
-    num_cams = len(q_list)-1
+def getVideo(q_list, num_cams):
 
     c = Camera(range(num_cams), fps=[70]*num_cams, resolution=[Camera.RES_LARGE]*num_cams, colour=[False]*num_cams) # opens camera
-    f0, t0 = c.read(0)
+    f0, t0 = c.read()
     print("opened cameras")
-
+    # t = t0
     while q_list[-1].empty():
-        for i in range(num_cams):
-            frame, t = c.read(i)
-            q_list[i].put((frame, datetime.now())) # puts frame on queue
+    # for i in range(500):
+        frames, times = c.read()
+        q_list[0].put((np.copy(frames), times))
+        # if q_list[0].qsize() > 50:
+            # print(q_list[0].qsize())
+        # print((times[0]-t[0], times[1]-t[1]))
+        # print(times)
+        # t = times
+    print(q_list[0].qsize(), "getVideo")
     
-    for j in range(num_cams):
-        q_list[j].put("END") # end signal
+    q_list[0].put("END") # end signal
     c.end()
 
 def listenTCPIP(q_list, folder_name):
     TCP_IP = "152.2.174.197"
-    TCP_PORT = 12345
+    TCP_PORT = 12346
 
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serverSocket.bind(("", TCP_PORT))
-#    serverSocket.connect(("", TCP_PORT))
+
 
     serverSocket.listen()
 
     clientSocket, clientAddress = serverSocket.accept()
-    clientSocket.settimeout(10.0)
     print('Connected by', clientAddress)
 
     f = open("./images/"+folder_name+"/times.csv", "a")
     writer = csv.writer(f, delimiter=',', quotechar='"')
 
-    chunks = bytearray(4)
+    chunks = bytearray(8)
+
+    bytes_recvd = 0          
+    while bytes_recvd < 8:
+        chunk = clientSocket.recv(min(8 - bytes_recvd, 2048))
+        chunks[bytes_recvd:bytes_recvd+len(chunk)] = chunk
+        bytes_recvd += len(chunk)
+        
+    filename = np.frombuffer(chunks,dtype='>u4')
+    print(filename)
+
     count = 0
     while q_list[-1].empty():
-        bytes_recvd = 0
-        try:       
-            while bytes_recvd < 4:
-                chunk = clientSocket.recv(min(8 - bytes_recvd, 2048))
-                t = time.time()
-                chunks[bytes_recvd:bytes_recvd+len(chunk)] = chunk
-                bytes_recvd += len(chunk)
-            
-            number = np.frombuffer(chunks,dtype='<u2')
-            if count%100 == 0:
-                print(number)
+        bytes_recvd = 0          
+        while bytes_recvd < 8:
+            chunk = clientSocket.recv(min(8 - bytes_recvd, 2048))
+            t = time.time()
+            chunks[bytes_recvd:bytes_recvd+len(chunk)] = chunk
+            bytes_recvd += len(chunk)
+        
+        number = np.frombuffer(chunks,dtype='>u4')
+        if count%100 == 0:
+            print(number)
+        if count == 0:
+
+        else:
             writer.writerow([t, number])
-            count += 1
-        except socket.timeout:
-            print("timed out")
-    print(q_list[-1].empty())
+        count += 1
 
     # while q.empty():
         # msg = serverSocket.recv()
@@ -149,19 +161,14 @@ if __name__ == "__main__":
     num_cams = int(input("Enter number of cameras: "))
     folder_name = input("Enter folder name: ")
 
-    c = Camera(range(num_cams), fps=[70]*num_cams, resolution=[Camera.RES_LARGE]*num_cams, colour=[False]*num_cams)
+    # c = Camera(range(num_cams), fps=[70]*num_cams, resolution=[Camera.RES_LARGE]*num_cams, colour=[False]*num_cams)
 
-    q_list = []
-    for i in range(num_cams):
-        q = mp.Queue()
-        first = c.read(i)
-        q.put(first)
-        q_list.append(q)
+    q_list = [mp.Queue()]
     q_list.append(mp.Queue())
-    c.end()
+    # c.end()
 
-    pget = mp.Process(target=getVideo, args=(q_list,))
-    pshow = mp.Process(target=showVideo, args=(q_list, folder_name, ))
+    pget = mp.Process(target=getVideo, args=(q_list, num_cams, ))
+    pshow = mp.Process(target=showVideo, args=(q_list, num_cams,folder_name, ))
     ptcpip = mp.Process(target=listenTCPIP, args=(q_list, folder_name, ))
     # plabjack = mp.Process(target=getLabjack, args=(q_list[-1], ))
     
