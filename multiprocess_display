@@ -13,11 +13,12 @@ import csv
 from copy import deepcopy
 
 def showVideo(q_list, num_cams, folder_name):
-
-    os.mkdir("./images/"+folder_name+"/") # sets up folder for imaging results
     
-    for i in range(num_cams):
-        os.mkdir("./images/"+folder_name+"/"+str(i))
+    try:
+        for i in range(num_cams):
+            os.mkdir("./images/"+folder_name+"/"+str(i))
+    except:
+        pass
 
     # cv2.startWindowThread() # starts display window
 
@@ -26,7 +27,7 @@ def showVideo(q_list, num_cams, folder_name):
         frames = []
         try:
             top = q_list[0].get()
-            if top == 'END': # end signal from queue
+            if top == "END": # end signal from queue
                 break
             frames, timestamp = top # pull first frame off of queue
             for j in range(num_cams):
@@ -41,7 +42,6 @@ def showVideo(q_list, num_cams, folder_name):
             pass
     print(q_list[0].qsize(), "show queue left over")
     print("window destroyed")
-
 
 def getVideo(q_list, num_cams):
 
@@ -63,50 +63,63 @@ def getVideo(q_list, num_cams):
     q_list[0].put("END") # end signal
     c.end()
 
-def listenTCPIP(q_list, folder_name):
-    TCP_IP = "152.2.174.197"
-    TCP_PORT = 12346
+def socketHelper(TCP_IP, TCP_PORT):
+    if TCP_IP == "":
+        TCP_IP = "152.2.174.197"
+    if TCP_PORT == "":
+        TCP_PORT = 12346
+    if TCP_IP == "si":
+        TCP_IP = "152.2.172.197"
 
     serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serverSocket.bind(("", TCP_PORT))
-
+#    serverSocket.connect(("", TCP_PORT))
 
     serverSocket.listen()
 
     clientSocket, clientAddress = serverSocket.accept()
     print('Connected by', clientAddress)
+    return serverSocket, clientSocket, clientAddress
+
+def listenTCPIP(q_list, folder_name, sig, clientSocket, clientAddress, serverSocket):
+
+    # serverSocket, clientSocket, clientAddress = socketHelper()
+    clientSocket.settimeout(1.0)
 
     f = open("./images/"+folder_name+"/times.csv", "a")
     writer = csv.writer(f, delimiter=',', quotechar='"')
 
     chunks = bytearray(8)
-
-    bytes_recvd = 0          
-    while bytes_recvd < 8:
-        chunk = clientSocket.recv(min(8 - bytes_recvd, 2048))
-        chunks[bytes_recvd:bytes_recvd+len(chunk)] = chunk
-        bytes_recvd += len(chunk)
-        
-    filename = np.frombuffer(chunks,dtype='>u4')
-    print(filename)
-
     count = 0
     while q_list[-1].empty():
-        bytes_recvd = 0          
-        while bytes_recvd < 8:
-            chunk = clientSocket.recv(min(8 - bytes_recvd, 2048))
-            t = time.time()
-            chunks[bytes_recvd:bytes_recvd+len(chunk)] = chunk
-            bytes_recvd += len(chunk)
-        
-        number = np.frombuffer(chunks,dtype='>u4')
-        if count%100 == 0:
-            print(number)
-        if count == 0:
 
-        else:
+        bytes_recvd = 0
+        try:
+            wait_count = 0       
+            while bytes_recvd < 4 and wait_count < 8:
+                chunk = clientSocket.recv(min(8 - bytes_recvd, 2048))
+                t = time.time()
+                chunks[bytes_recvd:bytes_recvd+len(chunk)] = chunk
+                bytes_recvd += len(chunk)
+                wait_count += 1
+            
+            number = np.frombuffer(chunks,dtype='<u2')%(2**32)
+            if count%100 == 0:
+                print(number)
             writer.writerow([t, number])
-        count += 1
+            count += 1
+        except socket.timeout:
+            if sig.empty():
+                print("Timed out, reconnecting...")
+            else:
+                sig.get()
+                print("Closing TCP_IP connection...")
+                break
+            #except:
+                #print("timed out, reconnecting")
+            # print(clientSocket.gettimeout())
+    if q_list[-1].empty():
+        print("Queue is empty.")
 
     # while q.empty():
         # msg = serverSocket.recv()
@@ -116,7 +129,7 @@ def listenTCPIP(q_list, folder_name):
     clientSocket.close()
     serverSocket.close()
 
-    print("exited listenTCPIP process")
+    # print("Exited listenTCPIP process.")
 
 def getLabjack(q):
     print("labjack process")
@@ -159,17 +172,37 @@ def getLabjack(q):
 
 if __name__ == "__main__":
     num_cams = int(input("Enter number of cameras: "))
-    folder_name = input("Enter folder name: ")
+    addr = input("Enter client IP address: ")
+    port = input("Enter port for connection: ")
+
+    ########## Getting correct folder name ###########
+    serverSocket, clientSocket, clientAddress = socketHelper(addr, port)
+    print("connected")
+    serverSocket.settimeout(5.0)
+
+    try:
+        chunk=""
+        while not len(chunk) > 0:
+            chunk = clientSocket.recv(2048)
+        folder_name = chunk.decode('utf-8')
+        print("Folder Name: " + folder_name)
+    except:
+        folder_name = input("Enter folder name: ")
+    os.mkdir("./images/"+folder_name+"/")
+
+    #clientSocket.close()
+    #serverSocket.close()
 
     # c = Camera(range(num_cams), fps=[70]*num_cams, resolution=[Camera.RES_LARGE]*num_cams, colour=[False]*num_cams)
 
     q_list = [mp.Queue()]
     q_list.append(mp.Queue())
     # c.end()
+    end_signal = mp.Queue()
 
     pget = mp.Process(target=getVideo, args=(q_list, num_cams, ))
     pshow = mp.Process(target=showVideo, args=(q_list, num_cams,folder_name, ))
-    ptcpip = mp.Process(target=listenTCPIP, args=(q_list, folder_name, ))
+    ptcpip = mp.Process(target=listenTCPIP, args=(q_list, folder_name, end_signal, clientSocket, clientAddress, serverSocket, ))
     # plabjack = mp.Process(target=getLabjack, args=(q_list[-1], ))
     
     # plabjack.start()
@@ -185,6 +218,8 @@ if __name__ == "__main__":
     pget.join()
     # print("joined1")
     pshow.join()
+    end_signal.put(1)
+    # print("end signal sent")
     ptcpip.join()
     # print("joined2")
     # plabjack.join()
