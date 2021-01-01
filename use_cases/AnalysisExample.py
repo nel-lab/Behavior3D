@@ -15,9 +15,9 @@ import matplotlib.pyplot as plt
 #%% build model
 #Customize this paths dictionary for your local paths. 
 pathsDict = {
-    'coordPath': './use_cases/setup_old/model_1_coordinates.csv', 
-    'DLCPath': './use_cases/setup_old/',
-    'PlotPath' : './use_cases/setup_old/'
+    'coordPath': './setup_old/model_1_coordinates.csv', 
+    'DLCPath': './setup_old/',
+    'PlotPath' : './results/'
 }
 
 cal = calibration(model = ['bot','fl','fr'], pathsDict = pathsDict)
@@ -67,7 +67,7 @@ for i in range(len(dim_red)):
 #%% compare KMeans for dim reduction methods
 from sklearn.cluster import KMeans, DBSCAN, SpectralClustering
 
-no_clus = 4
+no_clus = 3
 no_clus_tech = 2
 cluster = KMeans(n_clusters = no_clus)
 
@@ -268,8 +268,39 @@ for dic,clus,clus_l,clus_c,clus_d,clus_cl,clus_id in zip(dicts,sc,sc_labels,sc_c
     dic['sc_dist'] = clus_d
     dic['sc_closest'] = clus_cl
     dic['sc_ids'] = clus_id
+    
+#%% set axes function
+def set_axes(figure, num_clusters, num_points, show_y = False):
+    subplots = figure.get_axes()
+    # iterate over each cluster
+    for i in range(num_clusters):
+        temp_subplots = subplots[i*num_points:i*num_points+num_points]
+        # initialize min/max_ylim
+        min_ylim, max_ylim = np.inf, -np.inf
 
-#%% plot traces around kclosest points - paw center 'Z'
+        # iterate over each point in each cluster
+        for j in temp_subplots:
+            # find min/max_ylim
+            temp_min_ylim, temp_max_ylim = j.get_ylim()
+            min_ylim = min(min_ylim, temp_min_ylim)
+            max_ylim = max(max_ylim, temp_max_ylim)
+        
+        # set constant ylim for each cluster
+        [ax.set_ylim([min_ylim, max_ylim]) for ax in temp_subplots]
+        # "sharey" (hide yaxis for all but first point)
+        [ax.yaxis.set_visible(False) for ax in temp_subplots[1:]]
+        
+    # set xticks (middle frame) for each point
+    [ax.set_xticks([int(np.median(ax.get_xticks()))]) for ax in subplots]
+    
+    # set yticks (as min/max) for each point
+    [ax.set_yticks(ax.get_ylim()) for ax in subplots]
+    
+    if not show_y:
+        # remove yticks
+        [ax.set_yticks([]) for ax in subplots]
+
+#%% plot traces around kclosest points - paw center 'Y'
 spread=70   # plot k closest frames (+- spread)
 paws = [col for col in data.columns if col[-3:] == 'w_Y']
 
@@ -288,11 +319,18 @@ for dic in dicts:
                     ax.set_ylabel('cluster '+str(clust+1), size='large')
                 if clust==0:
                     ax.set_title('closest: '+str(num+1))
+                if num == 0 and clust == 0:
+                    ax.legend(paws)
+        
+        # set axes and figsize
+        set_axes(fig,num_clus,k)
         DPI = fig.get_dpi()
         fig.set_size_inches(1920.0/float(DPI),1080.0/float(DPI))
-        fig.savefig('/Users/jimmytabet/Desktop/Behavioral Classification Results/methods comp/Mean Center Before/4clusters_rand points/traces/'+dic['name']+'/'+c_type, dpi=DPI, bbox_inches='tight')
+        
+        fig.savefig('/Users/jimmytabet/Desktop/Behavioral Classification Results/methods comp/Mean Center Before/3clusters_rand points_same ylim/traces/'+dic['name']+'/'+c_type, dpi=DPI, bbox_inches='tight')
         plt.close('all')
 
+#%%
 #%% implement behavior montage
 from use_cases.behavior_montage import behavior_montage
 
