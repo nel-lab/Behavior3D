@@ -62,13 +62,13 @@ fig = plt.figure()
 for i in range(len(dim_red)): 
     ax = fig.add_subplot(2,3,i+1)
     ax.scatter(*dim_red[i].T)
-    ax.set_title(name[i]+': ds=50, mean center before wavelet')
+    ax.set_title(name[i]+': ds='+str(downsample)+', mean center before wavelet')
 
 #%% compare KMeans for dim reduction methods
 from sklearn.cluster import KMeans, DBSCAN, SpectralClustering
 
 no_clus = 3
-no_clus_tech = 2
+no_clus_tech = 1
 cluster = KMeans(n_clusters = no_clus)
 
 kmeans = []
@@ -120,31 +120,31 @@ for i in range(len(kmeans)):
 #     if i==0:
 #         ax.set_ylabel('dbscan', size='large')
     
-#%% compare SpectralClustering for dim reduction methods
+#%% compare SpectralClustering for dim reduction methods - TOO LONG TO RUN ON EVERY POINT
 # PCA/kPCA: "Graph is not fully connected, spectral embedding"
-cluster = SpectralClustering(n_clusters=no_clus, random_state=42)
+# cluster = SpectralClustering(n_clusters=no_clus, random_state=42)
 
-sc = []
-sc_labels = []
-for i in dim_red:
-    temp = cluster.fit(i)
-    sc.append(temp)
-    sc_labels.append(temp.labels_)
+# sc = []
+# sc_labels = []
+# for i in dim_red:
+#     temp = cluster.fit(i)
+#     sc.append(temp)
+#     sc_labels.append(temp.labels_)
     
-sc_centroids = []
-# fig = plt.figure()
-for i in range(len(sc)):
-    temp_centers=[]
-    ax = fig_all.add_subplot(no_clus_tech,len(dim_red),1*len(dim_red)+i+1)
-    for j in np.unique(sc_labels[i]):
-        ax.scatter(*dim_red[i][sc_labels[i]==j].T)
-        temp_centers.append(dim_red[i][sc_labels[i]==j].mean(axis=0))
-    temp_centroids = np.vstack(temp_centers)
-    sc_centroids.append(np.vstack(temp_centroids))
-    ax.scatter(*temp_centroids.T, c='k', marker='x')
-    # ax.set_title(name[i]+' spectral clustering')
-    if i==0:
-        ax.set_ylabel('spectral clustering', size='large')
+# sc_centroids = []
+# # fig = plt.figure()
+# for i in range(len(sc)):
+#     temp_centers=[]
+#     ax = fig_all.add_subplot(no_clus_tech,len(dim_red),1*len(dim_red)+i+1)
+#     for j in np.unique(sc_labels[i]):
+#         ax.scatter(*dim_red[i][sc_labels[i]==j].T)
+#         temp_centers.append(dim_red[i][sc_labels[i]==j].mean(axis=0))
+#     temp_centroids = np.vstack(temp_centers)
+#     sc_centroids.append(np.vstack(temp_centroids))
+#     ax.scatter(*temp_centroids.T, c='k', marker='x')
+#     # ax.set_title(name[i]+' spectral clustering')
+#     if i==0:
+#         ax.set_ylabel('spectral clustering', size='large')
 
 #%% show comparison
 fig_all.tight_layout()
@@ -178,9 +178,9 @@ k = 5
 n_points = 25
 kmeans_dist, kmeans_closest, kmeans_ids = kclosest(k, n_points, dim_red, kmeans_centroids)
 # dbscan_dist, dbscan_closest, dbscan_ids = kclosest(k, n_points, dim_red, dbscan_centroids)
-sc_dist, sc_closest, sc_ids = kclosest(k, n_points, dim_red, sc_centroids)
+# sc_dist, sc_closest, sc_ids = kclosest(k, n_points, dim_red, sc_centroids)
 
-ids_all = [kmeans_ids, sc_ids]
+ids_all = [kmeans_ids]
 
 #%% add kclosest points to comparison plot
 fig_num=0        
@@ -261,13 +261,13 @@ for dic,clus,clus_l,clus_c,clus_d,clus_cl,clus_id in zip(dicts,kmeans,kmeans_lab
 #     dic['dbscan_closest'] = clus_cl
 #     dic['dbscan_ids'] = clus_id
     
-for dic,clus,clus_l,clus_c,clus_d,clus_cl,clus_id in zip(dicts,sc,sc_labels,sc_centroids,sc_dist,sc_closest,sc_ids):
-    dic['sc'] = clus
-    dic['sc_labels'] = clus_l
-    dic['sc_centroids'] = clus_c
-    dic['sc_dist'] = clus_d
-    dic['sc_closest'] = clus_cl
-    dic['sc_ids'] = clus_id
+# for dic,clus,clus_l,clus_c,clus_d,clus_cl,clus_id in zip(dicts,sc,sc_labels,sc_centroids,sc_dist,sc_closest,sc_ids):
+#     dic['sc'] = clus
+#     dic['sc_labels'] = clus_l
+#     dic['sc_centroids'] = clus_c
+#     dic['sc_dist'] = clus_d
+#     dic['sc_closest'] = clus_cl
+#     dic['sc_ids'] = clus_id
     
 #%% set axes function
 def set_axes(figure, num_clusters, num_points, show_y = False):
@@ -330,11 +330,10 @@ for dic in dicts:
         fig.savefig('/Users/jimmytabet/Desktop/Behavioral Classification Results/methods comp/Mean Center Before/3clusters_rand points_same ylim/traces/'+dic['name']+'/'+c_type, dpi=DPI, bbox_inches='tight')
         plt.close('all')
 
-#%%
 #%% implement behavior montage
 from use_cases.behavior_montage import behavior_montage
 
-raw_video = './vids/front_right_Dec17.mp4'
+raw_video = '../vids/front_right_Dec17.mp4'
 
 # if hasattr(behavior_montage, 'mov'): del behavior_montage.mov
 

@@ -13,11 +13,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_val_predict
 from sklearn.svm import SVR
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import cross_val_predict
 
 from scipy.signal import medfilt
 from scipy import interpolate
@@ -112,7 +111,6 @@ def Andrea_filter(df):
 
     ids = np.arange(0,Predictions.shape[-1])
     PredictionsFilt3 = medfilt(Predictions, kernel_size=(3,1))[:,ids]
-    PredictionsFilt5 = medfilt(Predictions, kernel_size=(5,1))[:,ids]
     PredictionsFilt9 = medfilt(Predictions, kernel_size=(9,1))[:,ids]
 
     tol_pix = 6
@@ -226,6 +224,8 @@ class calibration():
             print('\nCalibration Results Saved')
         
         plt.show()
+        
+        return CV_predictions
 
     def raw_model(self):
         '''
@@ -276,6 +276,11 @@ class calibration():
         m1 = Predict_Real_Coordinates(dfs_stand, bodyparts, numCameras, self.regr_model)
         m1df = pd.DataFrame(m1)
         m1df.columns = columns
+
+        # # remove tail from models with only 2 cameras since 3 camera model should be better
+        # if numCameras == 2 and 'tail' in [c[:4].lower() for c in columns]:
+        #     cols = [c for c in m1df.columns if c.lower()[:4] != 'tail']
+        #     m1df=m1df[cols]
 
         self.raw_results = m1df
 
