@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 pathsDict = {
     'coordPath': './setup_old/model_1_coordinates.csv', 
     'DLCPath': './setup_old/',
-    'PlotPath' : './results/'
+    'PlotPath': './results/'
 }
 
 cal = calibration(model = ['bot','fl','fr'], pathsDict = pathsDict)
