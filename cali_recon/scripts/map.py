@@ -10,15 +10,17 @@ from DeepLabCut (DLC) to 3D reconstruction through SVR mapping.
 """
 
 #%% imports
-import os
 from functools import reduce
 import numpy as np
 import pandas as pd
+
 import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split, cross_val_predict
+from mpl_toolkits.mplot3d import Axes3D
+
 from sklearn.svm import SVR
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_squared_error
+
 from scipy.signal import medfilt
 from scipy import interpolate
 
@@ -230,7 +232,7 @@ class calibration():
         
     '''
     
-    def __init__(self, model, coordPath, DLCPaths, regr_model=None):
+    def __init__(self, model, coordPath, DLCPaths, regr_model=None, **kwargs):
         '''
         Initialization.
 
@@ -246,6 +248,9 @@ class calibration():
             Pre-trained regression model that maps 2D points to 3D. The default 
             is None, which builds a regression model using the build_model method
             (sklearn SVR).
+        **kwargs : misc
+            Keyword arguments passed into sklearn's SVR class, for example 'kernel', 
+            'degree', and 'C' parameters.
 
         Returns
         -------
@@ -266,11 +271,17 @@ class calibration():
         self.DLCpaths = DLCPaths
         self.regr_model = regr_model
         if self.regr_model is None:
-            self.build_model()
+            self.build_model(**kwargs)
         
-    def build_model(self):
+    def build_model(self, **kwargs):
         """
         Uses 2D coordinates (obtained by calibration experiment) to estimate coordinates in 3D.
+        
+        Parameters
+        ----------
+        **kwargs : misc
+            Keyword arguments passed into sklearn's SVR class, for example 'kernel', 
+            'degree', and 'C' parameters.
                         
         Returns:
         -------
@@ -290,12 +301,11 @@ class calibration():
         
         X = All_Data.iloc[:,:-3]
         y = All_Data.iloc[:,-3:]
-        
-        X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42,  test_size = 0.25)
-        
-        svm = SVR(kernel="poly", degree=2, C=1500, epsilon=0.01, gamma="scale")
+                
+        svm = SVR(**kwargs)
         regr = MultiOutputRegressor(svm)
-        regr.fit(X_train, y_train)
+        regr.fit(X, y)
+
 
         self.regr_model = regr
         print('Model Built\n-----------')
@@ -332,21 +342,22 @@ class calibration():
         X = All_Data.iloc[:,:-3]
         y = All_Data.iloc[:,-3:]
             
-        CV_predictions = cross_val_predict(self.regr_model, X, y, cv=folds)
-        MSE = mean_squared_error(CV_predictions, y)
-        print('\tCV MSE: ' + str(MSE))
+        preds = self.regr_model.predict(X)
+        
+        R2 = self.regr_model.score(X, y)
+        print(f'Model R^2: {R2}')
+        MSE = mean_squared_error(y, preds)
+        print(f'Model MSE: {MSE}')
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(CV_predictions[:,0], CV_predictions[:,1], CV_predictions[:,2], color = 'blue', label = 'pred')
+        ax.scatter(preds[:,0], preds[:,1], preds[:,2], color = 'blue', label = 'pred')
         ax.scatter(All_Data.iloc[:,-3], All_Data.iloc[:,-2], All_Data.iloc[:,-1], color = 'red', label = 'real')
         ax.set_title('Calibration Results')
-        ax.set_xlabel('X (mm)')
-        ax.set_ylabel('Y (mm)')
-        ax.set_zlabel('Z (mm)')
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
         plt.legend()
-
-
 
         # save
         if isinstance(save, str):
@@ -356,8 +367,6 @@ class calibration():
         else:
             pass
                 
-        return CV_predictions
-
     def raw_model(self):
         '''
         Transforms DLC outputs from multiple cameras into a single 3D representation.

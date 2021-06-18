@@ -65,7 +65,7 @@ def label_images(mov, labels, realPoints):
         col_lab.append(lab+'_y')
     
     # coords df
-    coords_df = pd.DataFrame(cord, columns = col_lab)
+    coords_df = pd.DataFrame(coords, columns = col_lab)
     
     # merge coords df with realPoints df
     coords_and_realPoints = pd.concat([coords_df, realPoints], axis=1)
@@ -73,11 +73,11 @@ def label_images(mov, labels, realPoints):
     return coords_and_realPoints
                   
 #%% set up/load data
-# mov_path = '/home/nel-lab/Desktop/cali_recon/cali_test_all.npz'
-# realPoints_path = '/home/nel-lab/Desktop/cali_recon/realPoints.csv'
+mov_path = '/home/nel-lab/Software/Behavior3D/cali_recon/cali_test_all.npz'
+realPoints_path = '/home/nel-lab/Software/Behavior3D/cali_recon/realPoints.csv'
 
-mov_path = '/Users/jimmytabet/Software/Behavior3D/cali_recon/cali_test_all.npz'
-realPoints_path = '/Users/jimmytabet/Software/Behavior3D/cali_recon/realPoints.csv'
+#mov_path = '/Users/jimmytabet/Software/Behavior3D/cali_recon/cali_test_all.npz'
+#realPoints_path = '/Users/jimmytabet/Software/Behavior3D/cali_recon/realPoints.csv'
 
 realPoints = pd.read_csv(realPoints_path)
 
@@ -89,4 +89,4 @@ with np.load(mov_path) as f:
 #%% label calibration points
 cord = label_images(mov, camera_labels, realPoints)
 # save as csv
-cord.to_csv('/Users/jimmytabet/Software/Behavior3D/cali_recon/model_coordinates.csv', index=False)
+#cord.to_csv('/Users/jimmytabet/Software/Behavior3D/cali_recon/model_coordinates.csv', index=False)
