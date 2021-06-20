@@ -12,21 +12,21 @@ micromanipulator). The reference point should be visible in all cameras in each 
 
 #%% imports
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd 
+import matplotlib.pyplot as plt
 
 #%% laebl_images function
-def label_images(mov, labels, realPoints):
+def label_images(movie, labels, realPoints):
     '''
     Label calibration points in each camera for each frame.
 
     Parameters
     ----------
-    mov : numpy array
-        Calibration frames from cali.py file. Size of array is 
-        num_frames x num_cameras x camera_width x camera_height.
+    movie : numpy array
+        Calibration frames from file created in step 1 (calibration). Size of
+        array is num_frames x num_cameras x camera_height x camera_width.
     labels : list
-        Camera label/description as input in cali.py.
+        Camera label/description as input in step 1 (calibration).
     realPoints : pandas df
         Dataframe (read from realPoints csv) that outline X, Y, Z coordinates 
         of calibration points.
@@ -40,13 +40,13 @@ def label_images(mov, labels, realPoints):
     '''
 
     # init coords
-    coords = np.zeros([len(mov), 2*len(labels)])
+    coords = np.zeros([len(movie), 2*len(labels)])
 
     # loop through each camera and each frame to label calibration point
     for cam in range(len(labels)):
-        for frame in range(len(mov)):
+        for frame in range(len(movie)):
             # index into specific camera and frame
-            im = mov[frame, cam, :, :]
+            im = movie[frame, cam, :, :]
             # show frame
             plt.imshow(im, cmap='gray')
             plt.xticks([])
@@ -76,17 +76,15 @@ def label_images(mov, labels, realPoints):
 mov_path = '/home/nel-lab/Software/Behavior3D/cali_recon/cali_test_all.npz'
 realPoints_path = '/home/nel-lab/Software/Behavior3D/cali_recon/realPoints.csv'
 
-#mov_path = '/Users/jimmytabet/Software/Behavior3D/cali_recon/cali_test_all.npz'
-#realPoints_path = '/Users/jimmytabet/Software/Behavior3D/cali_recon/realPoints.csv'
-
 realPoints = pd.read_csv(realPoints_path)
 
-# load calibration frames and camera labels from npz file generated in cali.py
+# load calibration frames and camera labels from npz file generated in step 1 (calibration)
 with np.load(mov_path) as f:
-    mov = f['movie']
+    movie = f['movie']
     camera_labels = f['labels']
 
 #%% label calibration points
-cord = label_images(mov, camera_labels, realPoints)
-# save as csv
-#cord.to_csv('/Users/jimmytabet/Software/Behavior3D/cali_recon/model_coordinates.csv', index=False)
+cord = label_images(movie, camera_labels, realPoints)
+
+#%% save as csv
+cord.to_csv('/Users/jimmytabet/Software/Behavior3D/cali_recon/model_coordinates.csv', index=False)

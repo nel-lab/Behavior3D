@@ -13,9 +13,7 @@ from DeepLabCut (DLC) to 3D reconstruction through SVR mapping.
 from functools import reduce
 import numpy as np
 import pandas as pd
-
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 from sklearn.svm import SVR
 from sklearn.multioutput import MultiOutputRegressor
@@ -199,7 +197,7 @@ def Andrea_filter(df):
     return df_filter
 
 #%% calibration class
-class calibration():
+class mapping():
     '''
     Class for calibration and 2D -> 3D mapping of DLC data.
     
@@ -308,7 +306,7 @@ class calibration():
 
 
         self.regr_model = regr
-        print('Model Built\n-----------')
+        print('Model Built')
 
     def calibration_results(self, folds = 5, save=False):
         '''

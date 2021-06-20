@@ -17,7 +17,7 @@ Instructions:
         0   0  20\n
         ...
 
-    2. run in terminal to activate usb cameras (Linux):
+    2. you may need to run the following in terminal to activate usb cameras:
         sudo chmod o+w /dev/bus/usb/001/*\n
         sudo chmod o+w /dev/bus/usb/002/*\n
         sudo chmod o+w /dev/bus/usb/003/*
@@ -29,10 +29,6 @@ Things to keep in mind:
             and 30 milimeters of vertical freedom
     2. regular increments make it easier to tell if you're off or missed a picture
         - suggestions - 5, 8, or 10mm horizontally, 5, or 10mm vertically
-    3. Save your planned real coordinates as a csv file with the X,Y,Z coordinates
-        - see realPoints.ods as an example. 
-    4. Make sure to note the order of your cameras at this stage
-        - you need to keep this consistent in later parts of processing
 """
 
 #%% imports
@@ -45,7 +41,8 @@ import matplotlib.pyplot as plt
 realPoints_path = '/home/nel-lab/Desktop/cali_recon/realPoints.csv'
 num_cameras = 3
 camera_fps = 70
-file_all = 'cali_test_all'
+# path/name of npz file that contains calibraiton images
+npz_file = 'cali_test_all.npz'
 
 #%% initialize connected cameras
 c = Camera(list(range(num_cameras)),
@@ -53,22 +50,20 @@ c = Camera(list(range(num_cameras)),
            resolution=[Camera.RES_LARGE]*num_cameras,
            colour=[False]*num_cameras)
 
-#%% display cameras
+#%% display cameras, exit screen when ready to start
 d = Display(c)
 
-#%% when finished, close the camera (may already be closed/destroyed)
-d.end()
-
-#%% read in realPoints.csv (used to see how many frames are needed)
+#%% initialize movie
+# read in realPoints.csv to see how many frames are needed
 realPoints = pd.read_csv(realPoints_path)
 
-#%% initializes movie
+# init movie
 frames, timestamps = c.read()
 frame_size = frames[0].shape
 num_frames = len(realPoints)
-mov = np.zeros([num_frames, num_cameras, frame_size[0], frame_size[1]], dtype=np.uint8)
+movie = np.zeros([num_frames, num_cameras, frame_size[0], frame_size[1]], dtype=np.uint8)
 
-#%% caputre calibration snapshots
+#%% capture calibration snapshots
 input(f'Move to first calibration point {tuple(realPoints.iloc[0])} and press enter to begin')
 # init plt.imshow
 plt.imshow([[0]])
@@ -78,8 +73,8 @@ for i in range(num_frames):
     # capture snapshot... (must be written twice)
     frames, timestamps = c.read()
     frames, timestamps = c.read()
-    # add to mov...
-    mov[i] = np.array(frames)
+    # add to movie...
+    movie[i] = np.array(frames)
     # display to ensure it is in view...
     plt.imshow(frames[0], cmap='gray')
     plt.xticks([])
@@ -96,13 +91,13 @@ for i in range(num_frames):
         
 plt.close('all')
 
-#%% check each camera below - note the order if you haven't already
+#%% label each camera
 cam_labels = []
 # init plt.imshow
 plt.imshow([[0]])
 plt.pause(.1)
 for camera in range(num_cameras):
-    plt.imshow(mov[num_frames-1,camera,:,:], cmap='gray')
+    plt.imshow(movie[num_frames-1,camera,:,:], cmap='gray')
     plt.xticks([])
     plt.yticks([])
     plt.title(f'Camera {camera}')
@@ -114,7 +109,7 @@ for camera in range(num_cameras):
 plt.close('all')
 
 #%% save movie and camera labels as npz file
-np.savez(file_all, movie=mov, labels=cam_labels)
+np.savez(npz_file, movie=movie, labels=cam_labels)
 
 #%% close the camera
 c.end()
