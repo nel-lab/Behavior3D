@@ -17,7 +17,7 @@ This package has been developed for calibration and mapping using 3 cameras, but
 ## Usage
 A typical workflow will follow these steps. Instructions are written here but also referenced in cell blocks of the corresponding scripts.
 ### 1. calibration.py
-> This script enables you to capture images that you can use to calibrate your cameras. The set of images for each camera and user-defined camera labels are saved > as one npz file. It is best run in blocks via Spyder or imported to a Jupyter Notebook.
+> This script enables you to capture images that you can use to calibrate your cameras. The set of images for each camera and user-defined camera labels are saved as one npz file. It is best run in blocks via Spyder or imported to a Jupyter Notebook.
 > 
 > 1. create realPoints.csv file with planned real X,Y,Z coordinates, should be in form:  
 > > X, Y, Z  
@@ -38,9 +38,9 @@ A typical workflow will follow these steps. Instructions are written here but al
 >   * suggestions - 5, 8, or 10mm horizontally, 5, or 10mm vertically
 
 ### 2. label_points.py
-> This script allows user to select 2D calibration point in each camera for each frame. The user should click on the same reference point in each frame/angle (for example, tip of micromanipulator). The reference point should be visible in all cameras in each frame. It uses the npz file created in step 1 (calibration) and saves a csv file containing all the info needed to map the 2D cameras to the 3D representation in step 5 (map)
+> This script allows user to select 2D calibration point in each camera for each frame. The user should click on the same reference point in each frame/angle (for example, tip of micromanipulator). The reference point should be visible in all cameras in each frame. It uses the npz file created in step 1 (calibration) and saves a model_coordinates csv file containing all the info needed to map the 2D cameras to the 3D representation in step 5 (mapping). It is best run in blocks via Spyder or imported to a Jupyter Notebook.
 ### 3. aquisition.py
-> This script provides a method to aquire behavior recordings from multiple cameras and save as avi movies. These movies can then be processed using DeepLabCut
+> This script provides a method to aquire behavior recordings from multiple cameras and save as avi movies. These movies can then be processed using DeepLabCut. It is important to save the avi movies with names that describe the associated camera view so mapping is done properly in the next step. It is best run in blocks via Spyder or imported to a Jupyter Notebook.
 ### (4. track relevant points using DeepLabCut (DLC))
-### 5. map.py
-> This module creates the multi-camera 2D --> 3D mapping using a support vector regression model. This is done by preprocessing and standardizing DLC output files to ensure tracked body parts appear in all camera views. It then maps the multi-camera 2D points to 3D using the trained calibration model. Finally, a filter can be used to smooth out the recontrstructed 3D points
+### 5. mapping.py
+> This module creates the multi-camera 2D --> 3D mapping using a support vector regression model. This is done by preprocessing and standardizing DLC output files to ensure tracked body parts appear in all camera views. It then maps the multi-camera 2D points to 3D using the trained calibration model. Finally, a filter can be used to smooth out the recontrstructed 3D points. It is important that the DLC files are ordered accoring to the camera view order in the model_coordinates csv file created in step 2 (label_points) to ensure proper mapping.
