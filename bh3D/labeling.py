@@ -9,6 +9,10 @@ This script allows user to select 2D calibration point in each camera for each f
 User should click on same reference point in each frame/angle (for example, tip of
 micromanipulator). The reference point should be visible in all cameras in each frame. 
 It is best run in blocks via the Spyder IDE.
+
+A short example is provided within this script. Paths point to associated output 
+files in the use_cases/labeling folder of the Behavior3D repo. All paths are 
+relative to this script's location in the Behavior3D repo.
 """
 
 #%% imports
@@ -74,13 +78,14 @@ def label_images(movie, labels, realPoints):
     return coords_and_realPoints
                   
 #%% set up/load data
-mov_path = '../use_cases/new_demo/cali_demo.npz'
-realPoints_path = '../use_cases/new_demo/realPoints.csv'
+realPoints_path = '../use_cases/calibration/realPoints.csv'
+cali_npz_path = '../use_cases/calibration/calibration_demo.npz'
+model_coords_path = '../use_cases/labeling/model_coordinates.csv'
 
 realPoints = pd.read_csv(realPoints_path)
 
 # load calibration frames and camera labels from npz file generated in step 1 (calibration)
-with np.load(mov_path) as f:
+with np.load(cali_npz_path) as f:
     movie = f['movie']
     camera_labels = f['labels']
 
@@ -88,4 +93,4 @@ with np.load(mov_path) as f:
 coords = label_images(movie, camera_labels, realPoints)
 
 #%% save as csv
-coords.to_csv('../use_cases/new_demo/model_coordinates.csv', index=False)
+coords.to_csv(model_coords_path, index=False)

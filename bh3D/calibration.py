@@ -9,6 +9,10 @@ This script enables you to capture images that you can use to calibrate your cam
 The set of images for each camera and user-defined camera labels are saved as one npz file.
 It is best run in blocks via the Spyder IDE.
 
+A short example is provided within this script. Paths point to associated output 
+files in the use_cases/calibration folder of the Behavior3D repo. All paths are 
+relative to this script's location in the Behavior3D repo.
+
 Instructions:
     1. create realPoints.csv file with planned real 3D coordinates, should be in form:
         X   Y   Z
@@ -34,11 +38,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 #%% setup
-realPoints_path = '../use_cases/new_demo/realPoints.csv'
+realPoints_path = '../use_cases/calibration/realPoints.csv'
 num_cameras = 3
 camera_fps = 70
 # path/name of npz file that contains calibration images
-npz_file = '../use_cases/new_demo/cali_demo.npz'
+cali_npz_path = '../use_cases/calibration/calibration_demo.npz'
 
 #%% initialize connected cameras
 c = Camera(list(range(num_cameras)),
@@ -105,7 +109,7 @@ for camera in range(num_cameras):
 plt.close('all')
 
 #%% save movie and camera labels as npz file
-np.savez(npz_file, movie=movie, labels=cam_labels)
+np.savez(cali_npz_path, movie=movie, labels=cam_labels)
 
 #%% close the camera
 c.end()

@@ -11,6 +11,10 @@ Movies are saved as npz files for each camera with the movie and timestamps. Mov
 are also saved seperately in the user-specified format (.avi, .mp4, .mov, etc.). 
 It is best run in blocks via the Spyder IDE.
 
+A short example is provided within this script. Paths point to associated output 
+files in the use_cases/acquisition folder of the Behavior3D repo. All paths are 
+relative to this script's location in the Behavior3D repo.
+
 You may need to run the following in terminal to activate usb cameras (Linux):
     sudo chmod o+w /dev/bus/usb/001/*
     sudo chmod o+w /dev/bus/usb/002/*
@@ -57,7 +61,7 @@ def save_video(file_name, movie, f_rate):
 
 #%% setup
 # path to model_coordinates path created in step 2 (labeling)
-model_coord_path = '../use_cases/new_demo/model_coordinates.csv'
+model_coords_path = '../use_cases/labeling/model_coordinates.csv'
 num_cameras = 3
 camera_fps = 70
 num_frames = 210
@@ -68,7 +72,7 @@ for example, '(base_name)_(label0).(video_format)',
              '(base_name)_(label1).(video_format)', etc.
 '''
 
-base_name = 'acquisition_demo'
+base_name = '../use_cases/acquisition/acquisition_demo'
 video_format = 'avi' # avi, mp4, mov
 
 #%% initialize connected cameras
@@ -98,13 +102,13 @@ for i in range(num_frames):
     
 #%% label each camera
 # print camera labels and order to help with model and DLCPaths below
-old_labels = pd.read_csv(model_coord_path).columns
+old_labels = pd.read_csv(model_coords_path).columns
 old_labels = [opt[:-2] for opt in old_labels[:-3][::2]]
 print('Previous camera labels (for reference when labeling behavior videos):\n', old_labels)
 
 cam_labels = []
 # init plt.imshow for Spyder
-plt.imshow([[0]], camp='gray')
+plt.imshow([[0]], cmap='gray')
 plt.pause(.1)
 for camera in range(num_cameras):
     plt.imshow(movie[num_frames-1,camera,:,:], cmap='gray')
@@ -119,13 +123,13 @@ for camera in range(num_cameras):
 plt.close('all')
 
 #%% save videos to npz
-file_names = [f'../use_cases/new_demo/{base_name}_{lab}.npz' for lab in cam_labels]
+file_names = [f'{base_name}_{lab}.npz' for lab in cam_labels]
 
 for num, name in enumerate(file_names):
     np.savez(name, movie=movie[:,num], times=times[:,num])
 
 #%% save videos in user-specified format
-file_names = [f'../use_cases/new_demo/{base_name}_{lab}.{video_format}' for lab in cam_labels]
+file_names = [f'{base_name}_{lab}.{video_format}' for lab in cam_labels]
 
 for num, name in enumerate(file_names):
     save_video(name, movie[:, num], f_rate=camera_fps)

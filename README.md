@@ -1,16 +1,17 @@
 # Behavior3D
 
-Package to calibrate and map mutiple camera points of view into a single 3D position. Using [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut) labeled data, one can then reconstruct the 3D position of tracked body parts from multiple cameras. Calibration and acquisition of behavior movies is performed through an inexpensive and reproducable setup using PS3Eye cameras.  
+Package to calibrate and map multiple camera points of view into a single 3D position. Using [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut) labeled data, one can then reconstruct the 3D position of tracked body parts from multiple cameras. Calibration and acquisition of behavior movies is performed through an inexpensive and reproducible setup using PS3Eye cameras.  
 
-This package has been developed for calibration and mapping using 3 cameras, but the code base can be generalized/altered to accomidate a different number. It has been tested on Linux using the Spyder IDE.
+This package has been developed for calibration and mapping using 3 cameras, but the code base can be generalized/altered to accommodate a different number. It has been tested on Linux using the Spyder IDE.
 
 ## Installation
 * Install [Anaconda](https://www.anaconda.com/products/individual)
 * clone Behavior3D repo
+* cd into Behavior3D directory
 * run ```conda env create -f environment.yml -n Behavior3D```
 * run ```conda activate Behavior3D```
 * clone pseyepy source code from https://github.com/bensondaled/pseyepy
-  * pseyepy is used for caputuring video with PS3Eye cameras
+  * pseyepy is used for capturing video with PS3Eye cameras
 * cd into pseyepy directory
 * run ```sudo path/to/env/python setup.py install```
   * it is important to specify the path to the Behavior3D environment python when using sudo. This path can be found by running ```which python``` and copying this path
@@ -46,11 +47,12 @@ A typical workflow will follow these steps. Instructions are written here but al
 > ```sudo chmod o+w /dev/bus/usb/001/*```  
 > ```sudo chmod o+w /dev/bus/usb/002/*```    
 > ```sudo chmod o+w /dev/bus/usb/003/*```
-### (4. track relevant points using DeepLabCut (DLC))
+### (4. Track relevant points using DeepLabCut (DLC))
 ### 5. ```mapping.py```
 > This module creates the multi-camera 2D --> 3D mapping using a support vector regression model. This is done by preprocessing and standardizing DLC output files (see examples in ```use_cases/mapping``` folder) to ensure tracked body parts appear in all camera views. It then maps the multi-camera 2D points to 3D using the trained calibration model. Finally, a filter can be used to smooth out the recontrstructed 3D points. 
 > 
-> For the mapping class, it is imperative that the order of the DLCPaths list corresponds to the order of the model variable. See the ```maping_demo.py``` file for more explanation.
+> For the mapping class, it is imperative that the order of the DLCPaths list corresponds to the order of the model variable. See the ```mapping_demo.py``` file for more explanation.
 
 ## Demo
-A full demo using real behavior videos can be run using the ```mapping_demo.py``` file found in the ```use_cases/mapping``` folder. This demo takes a model_coordinates.csv file (as would be generated in step 2 - labeling) and DLC files to reconstruct a head-fixed mouse walking on a wheel. It includes some visualizations of the 3D reconstruction. For more behavioral analysis, check out our [UMouse repo](https://github.com/nel-lab/UMouse)!
+A full demo using real behavior videos can be run using the ```mapping_demo.py``` file found in the ```use_cases/mapping_demo``` folder. This demo takes a model_coordinates.csv file (as would be generated in step 2 - labeling) and DLC files to reconstruct a head-fixed mouse walking on a wheel. It includes some visualizations of the 3D reconstruction. For more behavioral analysis, check out our [UMouse repo](https://github.com/nel-lab/UMouse)!
+

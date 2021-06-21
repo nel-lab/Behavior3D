@@ -5,10 +5,15 @@ Created on Fri Jun 18 01:57:57 2021
 
 @author: jimmytabet
 
-Mapping demo file. This script takes the model_coordinates csv file generated 
-in step 2 (labeling) and creates a 3D mapping. It then takes DeepLabCut 
+Mapping demo file. This script takes the model_coordinates csv file as would be 
+generated in step 2 (labeling) and creates a 3D mapping. It then takes DeepLabCut 
 labeled csv files and maps common bodyparts seen across all cameras to 3D. 
 It is best run in blocks via the Spyder IDE.
+
+Paths point to files in the use_cases/mapping folder of the Behavior3D repo. 
+The DLC files would be generated from DeepLabCut, while the model_coordinates.csv 
+file would be generated in step 2 (labeling) as a result of the camera calibration 
+steps. All paths are relative to this script's location in the Behavior3D repo.
 
 It is imperative that the order of the DLCPaths list corresponds to the order of 
 the model variable. For reference, the user-generated camera labels are printed 
@@ -18,19 +23,19 @@ in this script. Proper naming of the behavior movies as described in step 3
 For example, below the camera labels were defined as 'FL', 'FR', and 'BOT'. The 
 model variable is defined in the order ['BOT','FL','FR'], so it is imperative 
 that the DLCPaths are listed in the following order: 
-(['bot.csv', 'front_left.csv'', 'front_right.csv'])
+(['DLC_bot.csv', 'DLC_front_left.csv'', 'DLC_front_right.csv'])
 """
 
 #%% imports
 # may need to add Behavior3D repo to PYTHONPATH!
 # if using Spyder, click on Python logo in top bar to add to PYTHONPATH
 from bh3D.mapping import mapping
-import use_cases.new_demo.utils as utils
+import use_cases.mapping_demo.utils as utils
 import numpy as np
 import pandas as pd
 
 #%% setup - model options
-coordPath = '../setup_old/model_1_coordinates.csv'
+coordPath = '../mapping/demo_model_coordinates.csv'
 
 # print camera labels and order to help with model and DLCPaths below
 model_options = pd.read_csv(coordPath).columns
@@ -40,9 +45,9 @@ print('Cameras labels to reference when defining model and DLCPaths variables be
 #%% setup - define model/DLC paths
 model = ['BOT','FL','FR']
 
-DLCPaths = ['../setup_old/bot.csv',
-            '../setup_old/front_left.csv',
-            '../setup_old/front_right.csv']
+DLCPaths = ['../mapping/DLC_bot.csv',
+            '../mapping/DLC_front_left.csv',
+            '../mapping/DLC_front_right.csv']
 
 SVR_args = {'kernel':"poly", 'degree':2, 'C':1500}
 
@@ -102,7 +107,7 @@ pt2[0] += L/2
 pt1[2] += 4
 
 #%% cumulative plot of paw points
-utils.scatter(data, pt1, pt2, R, rot=True)
+utils.scatter(data, pt1, pt2, R)
 
 #%% animation
-anim = utils.animate(data, pt1, pt2, R, 70, save=True)
+anim = utils.animate(data, pt1, pt2, R, 70)
