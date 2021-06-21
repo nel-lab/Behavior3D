@@ -7,7 +7,8 @@ Created on Sun Jun  6 00:41:43 2021
 
 This script allows user to select 2D calibration point in each camera for each frame.
 User should click on same reference point in each frame/angle (for example, tip of
-micromanipulator). The reference point should be visible in all cameras in each frame.
+micromanipulator). The reference point should be visible in all cameras in each frame. 
+It is best run in blocks via the Spyder IDE.
 """
 
 #%% imports

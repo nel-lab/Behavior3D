@@ -8,7 +8,8 @@ Created on Sun Jun 20 13:46:56 2021
 This script allows for behavior movie acquisition from multiple camera angles. 
 After acquiring the movies, the user will be prompted to label each camera view. 
 Movies are saved as npz files for each camera with the movie and timestamps. Movies 
-are also saved seperately in the user-specified format (.avi, .mp4, .mov, etc.).
+are also saved seperately in the user-specified format (.avi, .mp4, .mov, etc.). 
+It is best run in blocks via the Spyder IDE.
 
 You may need to run the following in terminal to activate usb cameras (Linux):
     sudo chmod o+w /dev/bus/usb/001/*

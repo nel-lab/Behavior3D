@@ -7,7 +7,7 @@ Created on Thu Jun 17 13:03:49 2021
 
 This script enables you to capture images that you can use to calibrate your cameras. 
 The set of images for each camera and user-defined camera labels are saved as one npz file.
-It is best run in blocks via Spyder or imported to a Jupyter Notebook.
+It is best run in blocks via the Spyder IDE.
 
 Instructions:
     1. create realPoints.csv file with planned real 3D coordinates, should be in form:
