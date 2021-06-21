@@ -56,3 +56,5 @@ A typical workflow will follow these steps. Instructions are written here but al
 ## Demo
 A full demo using real behavior videos can be run using the ```mapping_demo.py``` file found in the ```use_cases/mapping_demo``` folder. This demo takes a model_coordinates.csv file (as would be generated in step 2 - labeling) and DLC files to reconstruct a head-fixed mouse walking on a wheel. It includes some visualizations of the 3D reconstruction. For more behavioral analysis, check out our [UMouse repo](https://github.com/nel-lab/UMouse)!
 
+## Developers
+* Jimmy Tabet, UNC
