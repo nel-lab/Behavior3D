@@ -8,7 +8,12 @@ Created on Fri Jun 18 01:57:57 2021
 Mapping demo file. This script takes the model_coordinates csv file as would be 
 generated in step 2 (labeling) and creates a 3D mapping. It then takes DeepLabCut 
 labeled csv files and maps common bodyparts seen across all cameras to 3D. 
-It is best run in blocks via the Spyder IDE.
+It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook.
+The matplotlib backend may need to be changed. Running:
+
+'%matplotlib auto'
+
+usually does the trick.
 
 Paths point to files in the use_cases/mapping folder of the Behavior3D repo. 
 The DLC files would be generated from DeepLabCut, while the model_coordinates.csv 
@@ -29,6 +34,12 @@ that the DLCPaths are listed in the following order:
 #%% imports
 # may need to add Behavior3D repo to PYTHONPATH!
 # if using Spyder, click on Python logo in top bar to add to PYTHONPATH
+# if using Jupyter Notebook:
+'''
+import sys
+sys.path.append('path/to/Behavior3D')
+'''
+
 from bh3D.mapping import mapping
 import use_cases.mapping_demo.utils as utils
 import numpy as np

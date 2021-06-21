@@ -7,7 +7,12 @@ Created on Thu Jun 17 13:03:49 2021
 
 This script enables you to capture images that you can use to calibrate your cameras. 
 The set of images for each camera and user-defined camera labels are saved as one npz file.
-It is best run in blocks via the Spyder IDE.
+It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook. 
+The matplotlib backend may need to be changed. Running:
+
+'%matplotlib auto'
+
+usually does the trick.
 
 A short example is provided within this script. Paths point to associated output 
 files in the use_cases/calibration folder of the Behavior3D repo. All paths are 

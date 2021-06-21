@@ -9,7 +9,12 @@ This script allows for behavior movie acquisition from multiple camera angles.
 After acquiring the movies, the user will be prompted to label each camera view. 
 Movies are saved as npz files for each camera with the movie and timestamps. Movies 
 are also saved seperately in the user-specified format (.avi, .mp4, .mov, etc.). 
-It is best run in blocks via the Spyder IDE.
+It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook.
+The matplotlib backend may need to be changed. Running:
+
+'%matplotlib auto'
+
+usually does the trick.
 
 A short example is provided within this script. Paths point to associated output 
 files in the use_cases/acquisition folder of the Behavior3D repo. All paths are 
