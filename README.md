@@ -2,45 +2,55 @@
 
 Package to calibrate and map mutiple camera points of view into a single 3D position. Using [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut) labeled data, one can then reconstruct the 3D position of tracked body parts from multiple cameras. Calibration and acquisition of behavior movies is performed through an inexpensive and reproducable setup using PS3Eye cameras.  
 
-This package has been developed for calibration and mapping using 3 cameras, but the code base can be generalized/altered to accomidate a different number. It has been tested on Linux and Mac OS.
+This package has been developed for calibration and mapping using 3 cameras, but the code base can be generalized/altered to accomidate a different number. It has been tested on Linux using the Spyder IDE.
 
 ## Installation
 * Install [Anaconda](https://www.anaconda.com/products/individual)
 * clone Behavior3D repo
 * run ```conda env create -f environment.yml -n Behavior3D```
-* run ```conda activate Behavrio3D```
+* run ```conda activate Behavior3D```
 * clone pseyepy source code from https://github.com/bensondaled/pseyepy
   * pseyepy is used for caputuring video with PS3Eye cameras
-* run ```python setup.py install```
-  * although the original pseyepy repo states to run ```sudo python setup.py install```, this created issues for me which were solved by simply running ```python setup.py install``` instead. More troubleshooting can be found [here](https://github.com/nel-lab/pseye)
+* cd into pseyepy directory
+* run ```sudo path/to/env/python setup.py install```
+  * it is important to specify the path to the Behavior3D environment python when using sudo. This path can be found by running ```which python``` and copying this path
 
 ## Usage
-A typical workflow will follow these steps. Instructions are written here but also referenced in cell blocks of the corresponding scripts.
-### 1. calibration.py
-> This script enables you to capture images that you can use to calibrate your cameras. The set of images for each camera and user-defined camera labels are saved as one npz file. It is best run in blocks via Spyder or imported to a Jupyter Notebook.
+A typical workflow will follow these steps. Instructions are written here but also referenced in cell blocks of the corresponding scripts. A short example for calibration, labeling, and acquisition is provided within the scripts and point to associated output files in the ```use_cases``` folder.
+### 1. ```calibration.py```
+> This script enables you to capture images that you can use to calibrate your cameras. The set of images for each camera and user-defined camera labels are saved as one npz file. It is best run in blocks via the Spyder IDE.
 > 
-> 1. create realPoints.csv file with planned real X,Y,Z coordinates, should be in form:  
-> > X, Y, Z  
-> > 0, 0, 0  
-> > 0, 0, 10  
-> > 0, 0, 20  
-> > ...
->
-> 2. run in terminal to activate usb cameras (Linux):
-> > ```sudo chmod o+w /dev/bus/usb/001/*```  
-> > ```sudo chmod o+w /dev/bus/usb/002/*```    
-> > ```sudo chmod o+w /dev/bus/usb/003/*```
+> **Instructions**
+> 1. create realPoints.csv file (see example in ```use_cases/calibration``` folder) with planned real X,Y,Z coordinates, should be in form:  
+> X, Y, Z  
+> 0, 0, 0  
+> 10 0, 0  
+> 20 0, 0  
+> ...
+> 
+> 2. you may need to run the following in terminal to activate usb cameras (Linux):  
+> ```sudo chmod o+w /dev/bus/usb/001/*```  
+> ```sudo chmod o+w /dev/bus/usb/002/*```    
+> ```sudo chmod o+w /dev/bus/usb/003/*```
 >         
-> Things to keep in mind:
-> * Plan ahead when condsidering your real world coordinate system
->   * moving something from one peg to another is approximately 25.4mm. With our micromanipulator, you have approximately 40 milimeters of horizontal freedom and 30 milimeters of vertical freedom
-> * Regular increments make it easier to tell if you're off or missed a picture
->   * suggestions - 5, 8, or 10mm horizontally, 5, or 10mm vertically
+> The script will walk you through the calibration snapshots (in 'capture calibration snapshots' cell), but plan ahead to make sure ALL real calibration coordinates can be seen in EVERY camera!
 
-### 2. label_points.py
-> This script allows user to select 2D calibration point in each camera for each frame. The user should click on the same reference point in each frame/angle (for example, tip of micromanipulator). The reference point should be visible in all cameras in each frame. It uses the npz file created in step 1 (calibration) and saves a model_coordinates csv file containing all the info needed to map the 2D cameras to the 3D representation in step 5 (mapping). It is best run in blocks via Spyder or imported to a Jupyter Notebook.
-### 3. aquisition.py
-> This script provides a method to aquire behavior recordings from multiple cameras and save as avi movies. These movies can then be processed using DeepLabCut. It is important to save the avi movies with names that describe the associated camera view so mapping is done properly in the next step. It is best run in blocks via Spyder or imported to a Jupyter Notebook.
+### 2. ```labeling.py```
+> This script allows user to select 2D calibration point in each camera for each frame. User should click on same reference point in each frame/angle (for example, tip of micromanipulator). The reference point should be visible in all cameras in each frame.
+> 
+> It uses the npz file created in step 1 (calibration) and saves a model_coordinates csv file (see example in ```use_cases/labeling``` folder) containing all the info needed to map the 2D cameras to the 3D representation in step 5 (mapping). It is best run in blocks via the Spyder IDE.
+### 3. ```aquisition.py```
+> This script allows for behavior movie acquisition from multiple camera angles. After acquiring the movies, the user will be prompted to label each camera view. Movies are saved as npz files for each camera with the movie and timestamps. Movies are also saved seperately in the user-specified format (.avi, .mp4, .mov, etc.). Examples of these outputs can be found in the ```use_cases/acquisition``` folder. It is best run in blocks via the Spyder IDE.
+>
+> You may need to run the following in terminal to activate usb cameras (Linux):  
+> ```sudo chmod o+w /dev/bus/usb/001/*```  
+> ```sudo chmod o+w /dev/bus/usb/002/*```    
+> ```sudo chmod o+w /dev/bus/usb/003/*```
 ### (4. track relevant points using DeepLabCut (DLC))
-### 5. mapping.py
-> This module creates the multi-camera 2D --> 3D mapping using a support vector regression model. This is done by preprocessing and standardizing DLC output files to ensure tracked body parts appear in all camera views. It then maps the multi-camera 2D points to 3D using the trained calibration model. Finally, a filter can be used to smooth out the recontrstructed 3D points. It is important that the DLC files are ordered accoring to the camera view order in the model_coordinates csv file created in step 2 (label_points) to ensure proper mapping.
+### 5. ```mapping.py```
+> This module creates the multi-camera 2D --> 3D mapping using a support vector regression model. This is done by preprocessing and standardizing DLC output files (see examples in ```use_cases/mapping``` folder) to ensure tracked body parts appear in all camera views. It then maps the multi-camera 2D points to 3D using the trained calibration model. Finally, a filter can be used to smooth out the recontrstructed 3D points. 
+> 
+> For the mapping class, it is imperative that the order of the DLCPaths list corresponds to the order of the model variable. See the ```maping_demo.py``` file for more explanation.
+
+## Demo
+A full demo using real behavior videos can be run using the ```mapping_demo.py``` file found in the ```use_cases/mapping``` folder. This demo takes a model_coordinates.csv file (as would be generated in step 2 - labeling) and DLC files to reconstruct a head-fixed mouse walking on a wheel. It includes some visualizations of the 3D reconstruction. For more behavioral analysis, check out our [UMouse repo](https://github.com/nel-lab/UMouse)!
