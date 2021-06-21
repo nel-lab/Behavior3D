@@ -11,3 +11,4 @@ dependencies:
 - spyder
 - scipy
 - cython
+- cv2
