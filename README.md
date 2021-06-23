@@ -2,7 +2,7 @@
 
 Package to calibrate and map multiple camera points of view into a single 3D position. Using [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut) labeled data, one can then reconstruct the 3D position of tracked body parts from multiple cameras. Calibration and acquisition of behavior movies is performed through an inexpensive and reproducible setup using PS3Eye cameras.  
 
-This package has been developed for calibration and mapping using 3 cameras, but the code base can be generalized/altered to accommodate a different number. It has been tested on Linux and is best run using the Spyder IDE or imported to a Jupyter Notebook.  
+This package has been developed for calibration and mapping using 3 cameras, but the code base can be generalized/altered to accommodate a different number. It has been tested on Linux running Ubuntu 18.04 and is best run using the Spyder IDE or imported to a Jupyter Notebook.  
 
 Note: The matplotlib backend may need to be changed. Running ```%matplotlib auto``` usually does the trick.
 
@@ -12,7 +12,7 @@ Note: The matplotlib backend may need to be changed. Running ```%matplotlib auto
 * cd into Behavior3D directory
 * run ```conda env create -f environment.yml -n Behavior3D```
 * run ```conda activate Behavior3D```
-* clone pseyepy source code from https://github.com/bensondaled/pseyepy
+* outside the Behavior3D directory, clone [pseyepy source code](https://github.com/bensondaled/pseyepy)
   * pseyepy is used for capturing video with PS3Eye cameras
 * cd into pseyepy directory
 * run ```sudo path/to/env/python setup.py install```
@@ -56,7 +56,7 @@ A typical workflow will follow these steps. Instructions are written here but al
 > For the mapping class, it is imperative that the order of the DLCPaths list corresponds to the order of the model variable. See the ```mapping_demo.py``` file for more explanation.
 
 ## Demo
-A full demo using real behavior videos can be run using the ```mapping_demo.py``` file found in the ```use_cases/mapping_demo``` folder. This demo takes a model_coordinates.csv file (as would be generated in step 2 - labeling) and DLC files to reconstruct a head-fixed mouse walking on a wheel. It includes some visualizations of the 3D reconstruction. For more behavioral analysis, check out our [UMouse repo](https://github.com/nel-lab/UMouse)!
+A full demo using real behavior videos (found in the ```demo_DLC_vids``` folder) can be run using the ```mapping_demo.py``` file found in the ```use_cases/mapping_demo``` folder. This demo takes a model_coordinates.csv file (as would be generated in step 2 - labeling) and DLC files to reconstruct a head-fixed mouse walking on a wheel. It includes some visualizations of the 3D reconstruction. For more behavioral analysis, check out our [UMouse repo](https://github.com/nel-lab/UMouse)!
 
 ## Developers
 * Jimmy Tabet, UNC
