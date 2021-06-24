@@ -41,7 +41,7 @@ sys.path.append('path/to/Behavior3D')
 '''
 
 from bh3D.mapping import mapping
-import use_cases.mapping_demo.utils as utils
+from use_cases.mapping_demo import utils
 import numpy as np
 import pandas as pd
 
