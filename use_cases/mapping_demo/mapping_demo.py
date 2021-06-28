@@ -73,6 +73,7 @@ cal.calibration_results()
 
 #%% map DLC data to 3D (also filters data)
 data = cal.map_to_3D()
+# data.to_csv('3D_reconstruction.csv', index=False)
 
 #%% use mapping to generate figures/animations
 '''
