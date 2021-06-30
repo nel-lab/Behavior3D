@@ -12,6 +12,7 @@ bodyparts from the Behavior3D repo.
 
 #%% imports
 import numpy as np
+
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
@@ -40,40 +41,40 @@ def xyz_wheel(pt1, pt2, radius):
 
     '''
     
-    #vector in direction of axis
+    # vector in direction of axis
     v = pt2 - pt1
-    #find magnitude of vector
+    # find magnitude of vector
     mag = np.linalg.norm(v)
-    #unit vector in direction of axis
+    # unit vector in direction of axis
     v = v / mag
-    #make some vector not in the same direction as v
+    # make some vector not in the same direction as v
     not_v = np.array([1, 0, 0])
     if (v == not_v).all():
         not_v = np.array([0, 1, 0])
-    #make vector perpendicular to v
+    # make vector perpendicular to v
     n1 = np.cross(v, not_v)
-    #normalize n1
+    # normalize n1
     n1 /= np.linalg.norm(n1)
-    #make unit vector perpendicular to v and n1
+    # make unit vector perpendicular to v and n1
     n2 = np.cross(v, n1)
-    #surface ranges over t from 0 to pred.shape[0] of axis and 0 to 2*pi
+    # surface ranges over t from 0 to mag of axis and 0 to 2*pi
     t = np.linspace(0, mag, 100)
     theta = np.linspace(0, 2 * np.pi, 100)
-    #use meshgrid to make 2d arrays
+    # use meshgrid to make 2d arrays
     t, theta = np.meshgrid(t, theta)
-    #generate coordinates for surface
+    # generate coordinates for surface
     X, Y, Z = [pt1[i] + v[i] * t + radius * np.sin(theta) * n1[i] + radius * np.cos(theta) * n2[i] for i in [0, 1, 2]]
 
     return X,Y,Z
 
 #%% scatter function
-def scatter(pred, wheel_pt1, wheel_pt2, R, rot=False, save=False):
+def scatter(data, wheel_pt1, wheel_pt2, R, rot=False, save=False):
     '''
     Plot a cumulative snapshot of paw points from 3D reconstruction. 
 
     Parameters
     ----------
-    pred : pandas df
+    data : pandas df
         Dataframe of 3D points.
     wheel_pt1 : float
         Center of one endpoint of wheel.
@@ -95,14 +96,14 @@ def scatter(pred, wheel_pt1, wheel_pt2, R, rot=False, save=False):
     '''
     
     # find min/max for axes limits
-    col_X = [col for col in pred.columns if col[-1] == 'X']
-    col_Y = [col for col in pred.columns if col[-1] == 'Y']
-    col_Z = [col for col in pred.columns if col[-1] == 'Z']
+    col_X = [col for col in data.columns if col[-1] == 'X']
+    col_Y = [col for col in data.columns if col[-1] == 'Y']
+    col_Z = [col for col in data.columns if col[-1] == 'Z']
 
     edge = 10
-    Xlim = [pred[col_X].min().min()-edge, pred[col_X].max().max()+edge]
-    Ylim = [pred[col_Y].min().min()-edge, pred[col_Y].max().max()+edge]
-    Zlim = [pred[col_Z].min().min()-edge, pred[col_Z].max().max()+edge]
+    Xlim = [data[col_X].min().min()-edge, data[col_X].max().max()+edge]
+    Ylim = [data[col_Y].min().min()-edge, data[col_Y].max().max()+edge]
+    Zlim = [data[col_Z].min().min()-edge, data[col_Z].max().max()+edge]
 
     # set up figure
     fig = plt.figure()
@@ -133,8 +134,8 @@ def scatter(pred, wheel_pt1, wheel_pt2, R, rot=False, save=False):
     plt.legend(handles=patches, loc='lower center', ncol = len(col_X))
 
     # plot paws
-    lpaw = pred[[col for col in pred.columns if col[0] == 'L' and col[-3] == 'w']]
-    rpaw = pred[[col for col in pred.columns if col[0] == 'R' and col[-3] == 'w']]
+    lpaw = data[[col for col in data.columns if col[0] == 'L' and col[-3] == 'w']]
+    rpaw = data[[col for col in data.columns if col[0] == 'R' and col[-3] == 'w']]
     ax.scatter(lpaw.iloc[:,0], lpaw.iloc[:,1], lpaw.iloc[:,2], color = 'red', alpha = 0.1)
     ax.scatter(rpaw.iloc[:,0], rpaw.iloc[:,1], rpaw.iloc[:,2], color = 'blue', alpha = 0.1)
 
@@ -166,13 +167,13 @@ def scatter(pred, wheel_pt1, wheel_pt2, R, rot=False, save=False):
         pass
 
 #%% animate function
-def animate(pred, wheel_pt1, wheel_pt2, R, fps, save=False):
+def animate(data, wheel_pt1, wheel_pt2, R, fps, save=False):
     '''
     Animate all 3D reconstructed points    
 
     Parameters
     ----------
-    pred : pandas df
+    data : pandas df
         Dataframe of 3D points.
     wheel_pt1 : float
         Center of one endpoint of wheel.
@@ -193,14 +194,14 @@ def animate(pred, wheel_pt1, wheel_pt2, R, fps, save=False):
     '''
     
     # find min/max for axes limits
-    col_X = [col for col in pred.columns if col[-1] == 'X']
-    col_Y = [col for col in pred.columns if col[-1] == 'Y']
-    col_Z = [col for col in pred.columns if col[-1] == 'Z']
+    col_X = [col for col in data.columns if col[-1] == 'X']
+    col_Y = [col for col in data.columns if col[-1] == 'Y']
+    col_Z = [col for col in data.columns if col[-1] == 'Z']
 
     edge = 10
-    Xlim = [pred[col_X].min().min()-edge, pred[col_X].max().max()+edge]
-    Ylim = [pred[col_Y].min().min()-edge, pred[col_Y].max().max()+edge]
-    Zlim = [pred[col_Z].min().min()-edge, pred[col_Z].max().max()+edge]
+    Xlim = [data[col_X].min().min()-edge, data[col_X].max().max()+edge]
+    Ylim = [data[col_Y].min().min()-edge, data[col_Y].max().max()+edge]
+    Zlim = [data[col_Z].min().min()-edge, data[col_Z].max().max()+edge]
 
     # set up figure
     fig = plt.figure()
@@ -221,7 +222,7 @@ def animate(pred, wheel_pt1, wheel_pt2, R, fps, save=False):
     deg = 70*factor
     base = list(range(deg+1))+list(range(deg,-1,-1))
     base = [x/factor for x in base]
-    mult, extra = pred.shape[0]//(len(base)), pred.shape[0]%(len(base))
+    mult, extra = data.shape[0]//(len(base)), data.shape[0]%(len(base))
     deg_vec = base*mult + base[:extra]
     
     # hide axes
@@ -268,8 +269,8 @@ def animate(pred, wheel_pt1, wheel_pt2, R, fps, save=False):
     # plot initial points
 
     # define paw centers
-    lpx, lpy, lpz = pred.loc[pred.index.start,'Lpaw_X'], pred.loc[pred.index.start,'Lpaw_Y'], pred.loc[pred.index.start,'Lpaw_Z']
-    rpx, rpy, rpz = pred.loc[pred.index.start,'Rpaw_X'], pred.loc[pred.index.start,'Rpaw_Y'], pred.loc[pred.index.start,'Rpaw_Z']
+    lpx, lpy, lpz = data.loc[data.index.start,'Lpaw_X'], data.loc[data.index.start,'Lpaw_Y'], data.loc[data.index.start,'Lpaw_Z']
+    rpx, rpy, rpz = data.loc[data.index.start,'Rpaw_X'], data.loc[data.index.start,'Rpaw_Y'], data.loc[data.index.start,'Rpaw_Z']
 
     lpaw,rpaw,lpawc,rpawc,other = (False,)*5
     graph = []
@@ -293,7 +294,7 @@ def animate(pred, wheel_pt1, wheel_pt2, R, fps, save=False):
 
         start = 3*x
         end = 3*x+3
-        temp = pred[pred.index==pred.index.start].iloc[:,start:end]
+        temp = data[data.index==data.index.start].iloc[:,start:end]
         temp.columns = ['x','y','z']
         graph.append(ax.scatter(temp.x, temp.y, temp.z, color=pcolor))
 
@@ -325,8 +326,8 @@ def animate(pred, wheel_pt1, wheel_pt2, R, fps, save=False):
     plt.legend(handles=patches, loc='lower center', ncol = 2)
 
     # run animation function @ fps (interval = 1000 ms/fps)
-    anim = FuncAnimation(fig, update, pred.shape[0], interval=1000/fps, repeat=0, 
-                         fargs = (pred, graph, col_X, deg_vec))    
+    anim = FuncAnimation(fig, update, data.shape[0], interval=1000/fps, repeat=0, 
+                         fargs = (data, graph, col_X, deg_vec))    
     
     # save
     if save:
