@@ -8,15 +8,10 @@ Created on Thu Jun 17 13:03:49 2021
 This script enables you to capture images that you can use to calibrate your cameras. 
 The set of images for each camera and user-defined camera labels are saved as one npz file.
 It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook. 
-The matplotlib backend may need to be changed. Running:
 
-'%matplotlib auto'
-
-usually does the trick.
-
-A short example is provided within this script. Paths point to associated output 
-files in the use_cases/calibration folder of the Behavior3D repo. All paths are 
-relative to this script's location in the Behavior3D repo.
+A short example is provided within this script. Paths should be updated to reflect 
+the local path of associated files in the use_cases/calibration folder of the 
+Behavior3D repo.
 
 Instructions:
     1. create realPoints.csv file with planned real 3D coordinates, should be in form:
@@ -34,20 +29,33 @@ Instructions:
     3. the script will walk you through the calibration snapshots (in 'capture 
        calibration snapshots' cell), but plan ahead to make sure ALL real calibration 
        coordinates can be seen in EVERY camera!
+       
+Note: the matplotlib backend has been explicitly set to TkAgg in this script 
+(line 45).
 """
 
 #%% imports
 from pseyepy import Camera, Display
+
 import numpy as np
 import pandas as pd
+
+import matplotlib
+# use TKAgg backend
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 #%% setup
-realPoints_path = '../use_cases/calibration/realPoints.csv'
+'''
+update paths to local paths in repo!
+'''
+
+realPoints_path = 'path/to/use_cases/calibration/realPoints.csv'
+# path/name of npz file to save (will contain calibration images)
+cali_npz_save_path = 'path/to/use_cases/calibration/calibration_demo.npz'
+
 num_cameras = 3
 camera_fps = 70
-# path/name of npz file that contains calibration images
-cali_npz_path = '../use_cases/calibration/calibration_demo.npz'
 
 #%% initialize connected cameras
 c = Camera(list(range(num_cameras)),
@@ -114,7 +122,7 @@ for camera in range(num_cameras):
 plt.close('all')
 
 #%% save movie and camera labels as npz file
-np.savez(cali_npz_path, movie=movie, labels=cam_labels)
+np.savez(cali_npz_save_path, movie=movie, labels=cam_labels)
 
 #%% close the camera
 c.end()

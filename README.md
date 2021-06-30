@@ -12,14 +12,17 @@ Note: The matplotlib backend may need to be changed. Running ```%matplotlib auto
 * cd into Behavior3D directory
 * run ```conda env create -f environment.yml -n Behavior3D```
 * run ```conda activate Behavior3D```
+* run ```pip install -e .```
 * outside the Behavior3D directory, clone [pseyepy source code](https://github.com/bensondaled/pseyepy)
   * pseyepy is used for capturing video with PS3Eye cameras
+> Additional pseyepy dependencies may be required (cython, libusb, etc.). Dependencies can usually be installed in the Behavior3D conda environment using ```conda install <package>```. See installation and troubleshooting in the pseyepy repo for help.
 * cd into pseyepy directory
 * run ```sudo path/to/env/python setup.py install```
   * it is important to specify the path to the Behavior3D environment python when using sudo. This path can be found by running ```which python``` and copying this path
 
 ## Usage
-A typical workflow will follow these steps. Instructions are written here but also referenced in cell blocks of the corresponding scripts. A short example for calibration, labeling, and acquisition is provided within the scripts and point to associated output files in the ```use_cases``` folder.
+A typical workflow will follow these steps. Instructions are written here but also referenced in cell blocks of the corresponding scripts. A short example for calibration, labeling, and acquisition is provided within the scripts. Paths should be updated to reflect 
+the local paths of associated files in the ```use_cases``` folder of the Behavior3D repo.
 ### 1. ```calibration.py```
 > This script enables you to capture images that you can use to calibrate your cameras. The set of images for each camera and user-defined camera labels are saved as one npz file. It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook.
 > 
@@ -33,9 +36,9 @@ A typical workflow will follow these steps. Instructions are written here but al
 > 
 > 2. you may need to run the following in terminal to activate usb cameras (Linux):  
 > ```sudo chmod o+w /dev/bus/usb/001/*```  
-> ```sudo chmod o+w /dev/bus/usb/002/*```    
+> ```sudo chmod o+w /dev/bus/usb/002/*```  
 > ```sudo chmod o+w /dev/bus/usb/003/*```
->         
+> 
 > The script will walk you through the calibration snapshots (in 'capture calibration snapshots' cell), but plan ahead to make sure ALL real calibration coordinates can be seen in EVERY camera!
 
 ### 2. ```labeling.py```
@@ -47,7 +50,7 @@ A typical workflow will follow these steps. Instructions are written here but al
 >
 > You may need to run the following in terminal to activate usb cameras (Linux):  
 > ```sudo chmod o+w /dev/bus/usb/001/*```  
-> ```sudo chmod o+w /dev/bus/usb/002/*```    
+> ```sudo chmod o+w /dev/bus/usb/002/*```  
 > ```sudo chmod o+w /dev/bus/usb/003/*```
 ### (4. Track relevant points using DeepLabCut (DLC))
 ### 5. ```mapping.py```
@@ -56,7 +59,9 @@ A typical workflow will follow these steps. Instructions are written here but al
 > For the mapping class, it is imperative that the order of the DLCPaths list corresponds to the order of the model variable. See the ```mapping_demo.py``` file for more explanation.
 
 ## Demo
-A full demo using real behavior videos (found in the ```demo_DLC_vids``` folder) can be run using the ```mapping_demo.py``` file found in the ```use_cases/mapping_demo``` folder. This demo takes a model_coordinates.csv file (as would be generated in step 2 - labeling) and DLC files to reconstruct a head-fixed mouse walking on a wheel. It includes some visualizations of the 3D reconstruction. For more behavioral analysis, check out our [UMouse repo](https://github.com/nel-lab/UMouse)!
+A full demo using real behavior videos (found in the ```demo_DLC_vids``` folder) can be run using the ```mapping_demo.py``` file found in the ```use_cases/mapping_demo``` folder. This demo takes a model_coordinates.csv file (as would be generated in step 2 - labeling) and DLC files to reconstruct a head-fixed mouse walking on a wheel. It includes some visualizations of the 3D reconstruction. Paths should be updated to reflect the local paths of associated files in the ```use_cases``` folder of the Behavior3D repo.  
+  
+For more behavioral analysis, check out our [UMouse repo](https://github.com/nel-lab/UMouse)!
 
 ## Developers
 * Jimmy Tabet, UNC

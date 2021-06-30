@@ -9,16 +9,12 @@ Mapping demo file. This script takes the model_coordinates csv file as would be
 generated in step 2 (labeling) and creates a 3D mapping. It then takes DeepLabCut 
 labeled csv files and maps common bodyparts seen across all cameras to 3D. 
 It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook.
-The matplotlib backend may need to be changed. Running:
-
-'%matplotlib auto'
-
-usually does the trick.
 
 Paths point to files in the use_cases/mapping folder of the Behavior3D repo. 
 The DLC files would be generated from DeepLabCut, while the model_coordinates.csv 
 file would be generated in step 2 (labeling) as a result of the camera calibration 
-steps. All paths are relative to this script's location in the Behavior3D repo.
+steps. Paths should be updated to reflect the local path of associated files in 
+the use_cases/mapping folder of the Behavior3D repo.
 
 It is imperative that the order of the DLCPaths list corresponds to the order of 
 the model variable. For reference, the user-generated camera labels are printed 
@@ -29,24 +25,28 @@ For example, below the camera labels were defined as 'FL', 'FR', and 'BOT'. The
 model variable is defined in the order ['BOT','FL','FR'], so it is imperative 
 that the DLCPaths are listed in the following order: 
 (['DLC_bot.csv', 'DLC_front_left.csv'', 'DLC_front_right.csv'])
+  
+Note: the matplotlib backend has been explicitly set to TkAgg in this script 
+(line 42).
 """
 
 #%% imports
-# may need to add Behavior3D repo to PYTHONPATH!
-# if using Spyder, click on Python logo in top bar to add to PYTHONPATH
-# if using Jupyter Notebook:
-'''
-import sys
-sys.path.append('path/to/Behavior3D')
-'''
-
 from bh3D.mapping import mapping
 from use_cases.mapping_demo import utils
+
 import numpy as np
 import pandas as pd
 
+import matplotlib
+# use TKAgg backend
+matplotlib.use('TkAgg')
+
 #%% setup - model options
-coordPath = '../mapping/demo_model_coordinates.csv'
+'''
+update paths to local paths in repo!
+'''
+
+coordPath = 'path/to/use_cases/mapping/demo_model_coordinates.csv'
 
 # print camera labels and order to help with model and DLCPaths below
 model_options = pd.read_csv(coordPath).columns
@@ -56,9 +56,13 @@ print('Cameras labels to reference when defining model and DLCPaths variables be
 #%% setup - define model/DLC paths
 model = ['BOT','FL','FR']
 
-DLCPaths = ['../mapping/DLC_bot.csv',
-            '../mapping/DLC_front_left.csv',
-            '../mapping/DLC_front_right.csv']
+'''
+update paths to local paths in repo!
+'''
+
+DLCPaths = ['path/to/use_cases/mapping/DLC_bot.csv',
+            'path/to/use_cases/mapping/DLC_front_left.csv',
+            'path/to/use_cases/mapping/DLC_front_right.csv']
 
 SVR_args = {'kernel':"poly", 'degree':2, 'C':1500}
 
@@ -82,8 +86,7 @@ can be plotted along with a snapshot of the paw points ('scatter' function), as
 well as a 3D reconstruction of the mouse paws during the behavior video 
 ('animation' function). These are just examples of use cases for visualization, 
 but for more in depth behavioral analysis, check out the UMouse package!
-'''
-'''
+
 IMPORTANT:
 Saving the animations proved to be tricky depending on OS, but I found that running 
 
@@ -118,7 +121,7 @@ pt2[0] += L/2
 pt1[2] += 4
 
 #%% cumulative plot of paw points
-utils.scatter(data, pt1, pt2, R)
+utils.scatter(data=data, wheel_pt1=pt1, wheel_pt2=pt2, R=R, rot=False, save=False)
 
 #%% animation
-anim = utils.animate(data, pt1, pt2, R, 70)
+anim = utils.animate(data=data, wheel_pt1=pt1, wheel_pt2=pt2, R=R, fps=70, save=False)
