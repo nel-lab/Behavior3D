@@ -39,10 +39,14 @@ import pandas as pd
 
 #%% setup - model options
 '''
-update paths to local paths in repo!
+DON'T FORGET TO UPDATE PATHS!
 '''
 
+
+
 coordPath = 'path/to/use_cases/mapping/demo_model_coordinates.csv'
+
+
 
 # print camera labels and order to help with model and DLCPaths below
 model_options = pd.read_csv(coordPath).columns
@@ -56,9 +60,13 @@ model = ['BOT','FL','FR']
 update paths to local paths in repo!
 '''
 
+
+
 DLCPaths = ['path/to/use_cases/mapping/DLC_bot.csv',
             'path/to/use_cases/mapping/DLC_front_left.csv',
             'path/to/use_cases/mapping/DLC_front_right.csv']
+
+
 
 SVR_args = {'kernel':"poly", 'degree':2, 'C':1500}
 

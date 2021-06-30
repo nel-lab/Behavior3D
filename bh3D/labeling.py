@@ -11,7 +11,7 @@ micromanipulator). The reference point should be visible in all cameras in each 
 It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook.
 
 A short example is provided within this script. Paths should be updated to reflect 
-the local path of associated files in the use_cases/labeling folder of the 
+the local paths of associated files in the use_cases/labeling folder of the 
 Behavior3D repo.
 
 Note: the matplotlib backend may need to be changed, try using Qt5Agg 
@@ -83,13 +83,16 @@ def label_images(movie, labels, realPoints):
                   
 #%% setup
 '''
-update paths to local paths in repo!
+DON'T FORGET TO UPDATE PATHS!
 '''
+
+
 
 realPoints_path = 'path/to/use_cases/calibration/realPoints.csv'
 cali_npz_path = 'path/to/use_cases/calibration/calibration_demo.npz'
 # path/name of csv file to save (will contain model coords)
 model_coords_save_path = 'path/to/use_cases/labeling/model_coordinates.csv'
+
 
 
 # load realPoints

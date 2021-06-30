@@ -12,7 +12,7 @@ are also saved seperately in the user-specified format (.avi, .mp4, .mov, etc.).
 It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook.
 
 A short example is provided within this script. Paths should be updated to reflect 
-the local path of associated files in the use_cases/acquisition folder of the 
+the local paths of associated files in the use_cases/acquisition folder of the 
 Behavior3D repo.
 
 You may need to run the following in terminal to activate usb cameras (Linux):
@@ -66,11 +66,16 @@ def save_video(file_name, movie, f_rate):
 
 #%% setup
 '''
-update paths to local paths in repo!
+DON'T FORGET TO UPDATE PATHS!
 '''
+
+
 
 # path to model_coordinates path created in step 2 (labeling)
 model_coords_path = 'path/to/use_cases/labeling/model_coordinates.csv'
+
+
+
 num_cameras = 3
 camera_fps = 70
 num_frames = 210
@@ -80,6 +85,8 @@ camera-specific labels will be added to the base name when saving the movies
 for example, '(base_name)_(label0).(video_format)',
              '(base_name)_(label1).(video_format)', etc.
 '''
+
+
 
 base_name = 'path/to/use_cases/acquisition/acquisition_demo'
 video_format = 'avi' # avi, mp4, mov
