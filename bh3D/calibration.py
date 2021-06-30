@@ -30,8 +30,8 @@ Instructions:
        calibration snapshots' cell), but plan ahead to make sure ALL real calibration 
        coordinates can be seen in EVERY camera!
        
-Note: the matplotlib backend has been explicitly set to TkAgg in this script 
-(line 45).
+Note: the matplotlib backend may need to be changed, try using Qt5Agg 
+(run '%matplotlib qt5' in IPython console) 
 """
 
 #%% imports
@@ -40,9 +40,6 @@ from pseyepy import Camera, Display
 import numpy as np
 import pandas as pd
 
-import matplotlib
-# use TKAgg backend
-matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 #%% setup

@@ -2,9 +2,11 @@
 
 Package to calibrate and map multiple camera points of view into a single 3D position. Using [DeepLabCut](https://github.com/DeepLabCut/DeepLabCut) labeled data, one can then reconstruct the 3D position of tracked body parts from multiple cameras. Calibration and acquisition of behavior movies is performed through an inexpensive and reproducible setup using PS3Eye cameras.  
 
-This package has been developed for calibration and mapping using 3 cameras, but the code base can be generalized/altered to accommodate a different number. It has been tested on Linux running Ubuntu 18.04 and is best run using the Spyder IDE or imported to a Jupyter Notebook.  
+This package has been developed for calibration and mapping using 3 cameras, but the code base can be generalized/altered to accommodate a different number. It has been tested on Linux running Ubuntu 18.04 and MacOS Big Sur. Scripts are best run using the Spyder IDE or imported to a Jupyter Notebook.  
 
-Note: The matplotlib backend may need to be changed. Running ```%matplotlib auto``` usually does the trick.
+Note: **particularly for MacOS**, the matplotlib backend may have to be changed to effectively use and interact with the PS3Eye cameras via the pseyepy package. This can be done by running the IPython magic command ```%matplotlib qt5``` in the IPython console in Spyder or at the beginning of a Jupyter Noetbook. This switches the backend to Qt5Agg, which seemed to work well across all OS.
+
+Note: you may need to run the following in terminal to activate usb cameras on Linux: ```sudo chmod o+w /dev/bus/usb/001/*```, ```sudo chmod o+w /dev/bus/usb/002/*```, ```sudo chmod o+w /dev/bus/usb/003/*```
 
 ## Installation
 * Install [Anaconda](https://www.anaconda.com/products/individual)
@@ -15,7 +17,7 @@ Note: The matplotlib backend may need to be changed. Running ```%matplotlib auto
 * run ```pip install -e .```
 * outside the Behavior3D directory, clone [pseyepy source code](https://github.com/bensondaled/pseyepy)
   * pseyepy is used for capturing video with PS3Eye cameras
-> Additional pseyepy dependencies may be required (cython, libusb, etc.). Dependencies can usually be installed in the Behavior3D conda environment using ```conda install <package>```. See installation and troubleshooting in the pseyepy repo for help.
+> Additional pseyepy dependencies may be required depending on OS (mainly libusb). See installation and troubleshooting in the pseyepy repo for help.
 * cd into pseyepy directory
 * run ```sudo path/to/env/python setup.py install```
   * it is important to specify the path to the Behavior3D environment python when using sudo. This path can be found by running ```which python``` and copying this path

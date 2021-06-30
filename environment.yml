@@ -1,4 +1,6 @@
 dependencies:
+- cython
+- h5py
 - jupyter
 - matplotlib
 - numpy

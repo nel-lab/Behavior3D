@@ -20,8 +20,8 @@ You may need to run the following in terminal to activate usb cameras (Linux):
     sudo chmod o+w /dev/bus/usb/002/*
     sudo chmod o+w /dev/bus/usb/003/*
     
-Note: the matplotlib backend has been explicitly set to TkAgg in this script 
-(line 36).
+Note: the matplotlib backend may need to be changed, try using Qt5Agg 
+(run '%matplotlib qt5' in IPython console) 
 """
 
 #%%
@@ -31,9 +31,6 @@ import cv2
 import numpy as np
 import pandas as pd
 
-import matplotlib
-# use TKAgg backend
-matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 #%% save_video function

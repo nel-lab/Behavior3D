@@ -26,8 +26,8 @@ model variable is defined in the order ['BOT','FL','FR'], so it is imperative
 that the DLCPaths are listed in the following order: 
 (['DLC_bot.csv', 'DLC_front_left.csv'', 'DLC_front_right.csv'])
   
-Note: the matplotlib backend has been explicitly set to TkAgg in this script 
-(line 42).
+Note: the matplotlib backend may need to be changed, try using Qt5Agg 
+(run '%matplotlib qt5' in IPython console) 
 """
 
 #%% imports
@@ -36,10 +36,6 @@ from use_cases.mapping_demo import utils
 
 import numpy as np
 import pandas as pd
-
-import matplotlib
-# use TKAgg backend
-matplotlib.use('TkAgg')
 
 #%% setup - model options
 '''
