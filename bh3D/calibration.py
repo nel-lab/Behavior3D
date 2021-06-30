@@ -7,7 +7,8 @@ Created on Thu Jun 17 13:03:49 2021
 
 This script enables you to capture images that you can use to calibrate your cameras. 
 The set of images for each camera and user-defined camera labels are saved as one npz file.
-It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook. 
+It is best run in blocks using the Spyder IDE, but can also be imported to a 
+Jupyter Notebook or run in terminal ('python /path/to/calibration.py').
 
 A short example is provided within this script. Paths should be updated to reflect 
 the local paths of associated files in the use_cases/calibration folder of the 
@@ -30,8 +31,11 @@ Instructions:
        calibration snapshots' cell), but plan ahead to make sure ALL real calibration 
        coordinates can be seen in EVERY camera!
        
-Note: the matplotlib backend may need to be changed, try using Qt5Agg 
-(run '%matplotlib qt5' in IPython console) 
+Note: The matplotlib backend may need to be changed. Running 
+
+%matplotlib auto
+
+in the IPython console usually does the trick.
 """
 
 #%% imports
@@ -64,6 +68,10 @@ c = Camera(list(range(num_cameras)),
            colour=[False]*num_cameras)
 
 #%% display cameras, exit screen when ready to start
+'''
+IF USING MACOS, you may need to comment this line out. See README for details.
+'''
+
 d = Display(c)
 
 #%% initialize movie

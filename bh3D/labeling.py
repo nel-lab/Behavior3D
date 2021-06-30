@@ -8,14 +8,18 @@ Created on Sun Jun  6 00:41:43 2021
 This script allows user to select 2D calibration point in each camera for each frame.
 User should click on same reference point in each frame/angle (for example, tip of
 micromanipulator). The reference point should be visible in all cameras in each frame. 
-It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook.
+It is best run in blocks using the Spyder IDE, but can also be imported to a 
+Jupyter Notebook or run in terminal ('python /path/to/labeling.py').
 
 A short example is provided within this script. Paths should be updated to reflect 
 the local paths of associated files in the use_cases/labeling folder of the 
 Behavior3D repo.
 
-Note: the matplotlib backend may need to be changed, try using Qt5Agg 
-(run '%matplotlib qt5' in IPython console) 
+Note: The matplotlib backend may need to be changed. Running 
+
+%matplotlib auto
+
+in the IPython console usually does the trick.
 """
 
 #%% imports

@@ -9,7 +9,8 @@ This script allows for behavior movie acquisition from multiple camera angles.
 After acquiring the movies, the user will be prompted to label each camera view. 
 Movies are saved as npz files for each camera with the movie and timestamps. Movies 
 are also saved seperately in the user-specified format (.avi, .mp4, .mov, etc.). 
-It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook.
+It is best run in blocks using the Spyder IDE, but can also be imported to a 
+Jupyter Notebook or run in terminal ('python /path/to/acquisition.py').
 
 A short example is provided within this script. Paths should be updated to reflect 
 the local paths of associated files in the use_cases/acquisition folder of the 
@@ -20,8 +21,11 @@ You may need to run the following in terminal to activate usb cameras (Linux):
     sudo chmod o+w /dev/bus/usb/002/*
     sudo chmod o+w /dev/bus/usb/003/*
     
-Note: the matplotlib backend may need to be changed, try using Qt5Agg 
-(run '%matplotlib qt5' in IPython console) 
+Note: The matplotlib backend may need to be changed. Running 
+
+%matplotlib auto
+
+in the IPython console usually does the trick.
 """
 
 #%%
@@ -98,6 +102,10 @@ c = Camera(list(range(num_cameras)),
            colour=[False]*num_cameras)
 
 #%% display cameras, exit screen when ready to start
+'''
+IF USING MACOS, you may need to comment this line out. See README for details.
+'''
+
 d = Display(c)
 
 #%% record from all cameras
@@ -110,6 +118,7 @@ movie = np.zeros([num_frames, num_cameras, frame_size[0], frame_size[1]], dtype=
 # init timestamps
 times = np.zeros([num_frames, num_cameras])
 
+input('Press enter to begin recording!')
 # capture video in all cameras
 for i in range(num_frames):
     frames, timestamps = c.read()

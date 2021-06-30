@@ -8,7 +8,8 @@ Created on Fri Jun 18 01:57:57 2021
 Mapping demo file. This script takes the model_coordinates csv file as would be 
 generated in step 2 (labeling) and creates a 3D mapping. It then takes DeepLabCut 
 labeled csv files and maps common bodyparts seen across all cameras to 3D. 
-It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook.
+It is best run in blocks using the Spyder IDE, but can also be imported to a 
+Jupyter Notebook or run in terminal ('python /path/to/mapping_demo.py').
 
 Paths point to files in the use_cases/mapping folder of the Behavior3D repo. 
 The DLC files would be generated from DeepLabCut, while the model_coordinates.csv 
@@ -26,8 +27,11 @@ model variable is defined in the order ['BOT','FL','FR'], so it is imperative
 that the DLCPaths are listed in the following order: 
 (['DLC_bot.csv', 'DLC_front_left.csv'', 'DLC_front_right.csv'])
   
-Note: the matplotlib backend may need to be changed, try using Qt5Agg 
-(run '%matplotlib qt5' in IPython console) 
+Note: The matplotlib backend may need to be changed. Running 
+
+%matplotlib auto
+
+in the IPython console usually does the trick.
 """
 
 #%% imports
