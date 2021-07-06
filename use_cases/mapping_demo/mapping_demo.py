@@ -85,6 +85,8 @@ cal.calibration_results()
 
 #%% map DLC data to 3D (also filters data)
 data = cal.map_to_3D()
+# save 3D reconstruction as csv
+data.to_csv('path/to/use_cases/mapping_demo/bh3D_demo_recon.csv', index=False)
 
 #%% use mapping to generate figures/animations
 '''
