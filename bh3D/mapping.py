@@ -221,8 +221,8 @@ class mapping():
     -------
     build_model():
         Uses 2D coordinates (obtained by calibration experiment) to estimate coordinates in 3D.
-    calibration_results(folds = 5, save=False):
-        Cross-validation calibration results.
+    calibration_results(save=False):
+        Calibration results.
     raw_model():
         Transforms DLC outputs from multiple cameras into a single 3D representation.
     map_to_3D(self, filter=simple_filter, raw=None):
@@ -309,14 +309,12 @@ class mapping():
         self.regr_model = regr
         print('Model Built')
 
-    def calibration_results(self, folds = 5, save=False):
+    def calibration_results(self, save=False):
         '''
-        Cross-validation calibration results.
+        Calibration results.
 
         Parameters
-        ----------
-        folds : int, optional
-            Number of folds to perform cross-calibdation on. The default is 5.            
+        ----------           
         save : bool or str, optional
             Save plot of 3D calibration predictions vs actual points. If a str
             is passed, the figure will be saved with that name/location. The 
@@ -324,8 +322,7 @@ class mapping():
 
         Returns
         -------
-        CV_predictions : df
-            Cross-validation calibration results.
+        None. Plots calibration results and prints R^2 and MSE values.
 
         '''
 
