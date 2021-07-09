@@ -8,21 +8,24 @@ Created on Sun Jun  6 00:41:43 2021
 This script allows user to select 2D calibration point in each camera for each frame.
 User should click on same reference point in each frame/angle (for example, tip of
 micromanipulator). The reference point should be visible in all cameras in each frame. 
-It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook.
-The matplotlib backend may need to be changed. Running:
+It is best run in blocks using the Spyder IDE, but can also be imported to a 
+Jupyter Notebook or run in terminal ('python /path/to/labeling.py').
 
-'%matplotlib auto'
+A short example is provided within this script. Paths should be updated to reflect 
+the local paths of associated files in the use_cases/labeling folder of the 
+Behavior3D repo.
 
-usually does the trick.
+Note: The matplotlib backend may need to be changed. Running 
 
-A short example is provided within this script. Paths point to associated output 
-files in the use_cases/labeling folder of the Behavior3D repo. All paths are 
-relative to this script's location in the Behavior3D repo.
+%matplotlib auto
+
+in the IPython console usually does the trick.
 """
 
 #%% imports
 import numpy as np
 import pandas as pd 
+
 import matplotlib.pyplot as plt
 
 #%% laebl_images function
@@ -82,11 +85,21 @@ def label_images(movie, labels, realPoints):
     
     return coords_and_realPoints
                   
-#%% set up/load data
-realPoints_path = '../use_cases/calibration/realPoints.csv'
-cali_npz_path = '../use_cases/calibration/calibration_demo.npz'
-model_coords_path = '../use_cases/labeling/model_coordinates.csv'
+#%% setup
+'''
+DON'T FORGET TO UPDATE PATHS!
+'''
 
+
+
+realPoints_path = 'path/to/use_cases/calibration/realPoints.csv'
+cali_npz_path = 'path/to/use_cases/calibration/calibration_demo.npz'
+# path/name of csv file to save (will contain model coords)
+model_coords_save_path = 'path/to/use_cases/labeling/model_coordinates.csv'
+
+
+
+# load realPoints
 realPoints = pd.read_csv(realPoints_path)
 
 # load calibration frames and camera labels from npz file generated in step 1 (calibration)
@@ -95,7 +108,7 @@ with np.load(cali_npz_path) as f:
     camera_labels = f['labels']
 
 #%% label calibration points
-coords = label_images(movie, camera_labels, realPoints)
+coords = label_images(movie=movie, labels=camera_labels, realPoints=realPoints)
 
 #%% save as csv
-coords.to_csv(model_coords_path, index=False)
+coords.to_csv(model_coords_save_path, index=False)

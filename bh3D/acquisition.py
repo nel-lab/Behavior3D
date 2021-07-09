@@ -9,28 +9,32 @@ This script allows for behavior movie acquisition from multiple camera angles.
 After acquiring the movies, the user will be prompted to label each camera view. 
 Movies are saved as npz files for each camera with the movie and timestamps. Movies 
 are also saved seperately in the user-specified format (.avi, .mp4, .mov, etc.). 
-It is best run in blocks via the Spyder IDE or imported to a Jupyter Notebook.
-The matplotlib backend may need to be changed. Running:
+It is best run in blocks using the Spyder IDE, but can also be imported to a 
+Jupyter Notebook or run in terminal ('python /path/to/acquisition.py').
 
-'%matplotlib auto'
-
-usually does the trick.
-
-A short example is provided within this script. Paths point to associated output 
-files in the use_cases/acquisition folder of the Behavior3D repo. All paths are 
-relative to this script's location in the Behavior3D repo.
+A short example is provided within this script. Paths should be updated to reflect 
+the local paths of associated files in the use_cases/acquisition folder of the 
+Behavior3D repo.
 
 You may need to run the following in terminal to activate usb cameras (Linux):
     sudo chmod o+w /dev/bus/usb/001/*
     sudo chmod o+w /dev/bus/usb/002/*
     sudo chmod o+w /dev/bus/usb/003/*
+    
+Note: The matplotlib backend may need to be changed. Running 
+
+%matplotlib auto
+
+in the IPython console usually does the trick.
 """
 
 #%%
 from pseyepy import Camera, Display
+
 import cv2
 import numpy as np
 import pandas as pd
+
 import matplotlib.pyplot as plt
 
 #%% save_video function
@@ -65,8 +69,17 @@ def save_video(file_name, movie, f_rate):
     video.release()
 
 #%% setup
+'''
+DON'T FORGET TO UPDATE PATHS!
+'''
+
+
+
 # path to model_coordinates path created in step 2 (labeling)
-model_coords_path = '../use_cases/labeling/model_coordinates.csv'
+model_coords_path = 'path/to/use_cases/labeling/model_coordinates.csv'
+
+
+
 num_cameras = 3
 camera_fps = 70
 num_frames = 210
@@ -77,7 +90,9 @@ for example, '(base_name)_(label0).(video_format)',
              '(base_name)_(label1).(video_format)', etc.
 '''
 
-base_name = '../use_cases/acquisition/acquisition_demo'
+
+
+base_name = 'path/to/use_cases/acquisition/acquisition_demo'
 video_format = 'avi' # avi, mp4, mov
 
 #%% initialize connected cameras
@@ -87,6 +102,10 @@ c = Camera(list(range(num_cameras)),
            colour=[False]*num_cameras)
 
 #%% display cameras, exit screen when ready to start
+'''
+IF USING MACOS, you may need to comment this line out. See README for details.
+'''
+
 d = Display(c)
 
 #%% record from all cameras
@@ -99,6 +118,7 @@ movie = np.zeros([num_frames, num_cameras, frame_size[0], frame_size[1]], dtype=
 # init timestamps
 times = np.zeros([num_frames, num_cameras])
 
+input('Press enter to begin recording!')
 # capture video in all cameras
 for i in range(num_frames):
     frames, timestamps = c.read()
@@ -137,4 +157,4 @@ for num, name in enumerate(file_names):
 file_names = [f'{base_name}_{lab}.{video_format}' for lab in cam_labels]
 
 for num, name in enumerate(file_names):
-    save_video(name, movie[:, num], f_rate=camera_fps)
+    save_video(file_name=name, movie=movie[:, num], f_rate=camera_fps)

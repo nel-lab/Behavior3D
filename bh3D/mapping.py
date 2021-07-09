@@ -5,14 +5,15 @@ Created on Thu Oct 29 13:14:49 2020
 
 @author: jimmytabet
 
-Calibration module for Behavior3D. Transforms multi-camera 2D tracking coordinates
-from DeepLabCut (DLC) to 3D reconstruction through SVR mapping.
+Mapping module for Behavior3D. Trains SVR model on camera calibration data and 
+maps multi-camera 2D tracking coordinates from DeepLabCut (DLC) to 3D.
 """
 
 #%% imports
 from functools import reduce
 import numpy as np
 import pandas as pd
+
 import matplotlib.pyplot as plt
 
 from sklearn.svm import SVR
