@@ -10,6 +10,10 @@ maps multi-camera 2D tracking coordinates from DeepLabCut (DLC) to 3D.
 """
 
 #%% imports
+import matplotlib
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+
 from functools import reduce
 import numpy as np
 import pandas as pd
@@ -339,11 +343,13 @@ class mapping():
         X = All_Data.iloc[:,:-3]
         y = All_Data.iloc[:,-3:]
             
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
         preds = self.regr_model.predict(X_test)
         
-        preds_train = self.regr_model.predict(X_train)
+        # preds_train = self.regr_model.predict(X_train)
+        
+        preds_all = self.regr_model.predict(X)
         
         print(f'train points = {len(X_train)}')
         print(f'test points = {len(X_test)}')
@@ -356,16 +362,19 @@ class mapping():
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        ax.scatter(y.iloc[:,0], y.iloc[:,1], y.iloc[:,2], s=30, color = 'red', label = 'real', alpha=0.6)
-        ax.scatter(preds_train[:,0], preds_train[:,1], preds_train[:,2], s=30, color = 'blue', label = 'fitted', alpha=0.8)
-        ax.scatter(preds[:,0], preds[:,1], preds[:,2], s=30, color = 'k', label = 'predicted', alpha=0.8)
+        s=20
+        a = 0.6
+
+        ax.scatter(y.iloc[:,0], y.iloc[:,1], y.iloc[:,2], s=s, color = 'red', label = 'real', alpha=a)
+        ax.scatter(preds_all[:,0], preds_all[:,1], preds_all[:,2], s=s, color = 'blue', label = 'fitted', alpha=a)
+        ax.scatter(preds[:,0], preds[:,1], preds[:,2], s=5*s, facecolors='none', color = 'k', label = 'predicted\n(test points)', alpha=1)
 
         ax.set_title('Calibration Results')
         ax.set_xlabel('X (mm)')
         ax.set_ylabel('Y (mm)')
         ax.set_zlabel('Z (mm)')
         plt.legend(loc='upper left')
-        
+
         # save
         if isinstance(save, str):
             plt.savefig(save, dpi=300, transparent=True)

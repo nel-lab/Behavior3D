@@ -52,7 +52,7 @@ DON'T FORGET TO UPDATE PATHS!
 
 
 
-coordPath = '/Users/jimmytabet/Software/Behavior3D/use_cases/mapping/demo_model_coordinates.csv'
+coordPath = '/home/nel-lab/Software/Behavior3D/use_cases/mapping/demo_model_coordinates.csv'
 
 
 
@@ -70,9 +70,9 @@ update paths to local paths in repo!
 
 
 
-DLCPaths = ['/Users/jimmytabet/Software/Behavior3D/use_cases/mapping/DLC_bot.csv',
-            '/Users/jimmytabet/Software/Behavior3D/use_cases/mapping/DLC_front_left.csv',
-            '/Users/jimmytabet/Software/Behavior3D/use_cases/mapping/DLC_front_right.csv']
+DLCPaths = ['/home/nel-lab/Software/Behavior3D/use_cases/mapping/DLC_bot.csv',
+            '/home/nel-lab/Software/Behavior3D/use_cases/mapping/DLC_front_left.csv',
+            '/home/nel-lab/Software/Behavior3D/use_cases/mapping/DLC_front_right.csv']
 
 
 
@@ -85,7 +85,11 @@ if not set(model).issubset(model_options):
 cal = mapping(model, coordPath, DLCPaths, **SVR_args)
 
 #%% display calibration model results
-cal.calibration_results()#save='/Users/jimmytabet/Software/Behavior3D/paper_figs/cali_results.pdf')
+cal.calibration_results()#save='/home/nel-lab/Desktop/Jimmy/BehaviorPaper/cali_results_train_test_split.pdf')
+
+#%% ADJUST FIG THEN SAVE
+import matplotlib.pyplot as plt
+plt.savefig('/home/nel-lab/Software/Behavior3D/paper_figs/cali_results_train_test_split.pdf', transparent=True, dpi=300)
 
 #%% map DLC data to 3D (also filters data)
 data = cal.map_to_3D()
