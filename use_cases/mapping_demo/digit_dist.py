@@ -10,7 +10,12 @@ Created on Sun Jun 27 20:52:24 2021
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import cm 
+from matplotlib.pyplot import cm
+from scipy.signal import savgol_filter
+
+import matplotlib
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 #%% digit distance functions (calculate and graph)
 def digit_dist(df):
@@ -110,44 +115,112 @@ def dist_graph(df):
     fig.tight_layout()
     
 #%% read in 3D reconstruction
-data = pd.read_csv('3D_reconstruction.csv')
+data = pd.read_csv('bh3D_demo_recon.csv')
 
 #%% digit distances
 df_digit_dist, colL, colR = digit_dist(data)
 
-# overlay left and right paw cumulative distances over time
-plt.plot(df_digit_dist['Lpaw_sum_dist'], c='C0', label= 'Left Paw', alpha=0.7)
-plt.plot(df_digit_dist['Rpaw_sum_dist'], c='C1', label = 'Right Paw', alpha=0.7)
+#%%
+lplot = np.mean(df_digit_dist.iloc[:,:4], axis=1)
+rplot = np.mean(df_digit_dist.iloc[:,5:-1], axis=1)
+
+plt.plot(savgol_filter(lplot, 25, 3), c='blue', label= 'left paw', alpha=0.7)
+plt.plot(savgol_filter(rplot, 25, 3), c='red', label = 'right paw', alpha=0.7)
 plt.legend()
-plt.title('(Cumulative) Digit Distance from Paw Center')
+# plt.title('(Cumulative) Digit Distance from Paw Center')
 
 # optional, zoom in on snippet where mouse is walking to see alternating left and right paw
-# plt.ylim([0,30])
-# plt.xlim([3500,4000])
+plt.ylim([0,10])
+plt.xlim([4000,5000])
 
 # optionally, zoom in on rot/walk snippet
 # plt.xlim([1300,2400])
+plt.xlabel('Frame')
+plt.ylabel('Distance (mm)')
+plt.title('Average Digit Distance to Paw Center')
 
-# plt.savefig('mouse_filter_pawdist')
+# plt.savefig('/Users/jimmytabet/Downloads/paw_dist.pdf', dpi=300, transparent=True)
+#%%
+# #%%
 
-#%% overlay all digits
-df_digit_dist[colL].plot()
+# # overlay left and right paw cumulative distances over time
+# plt.plot(np.mean(df_digit_dist.iloc[:,:4], axis=1), c='C0', label= 'Left Paw', alpha=0.7)
+# plt.plot(np.mean(df_digit_dist.iloc[:,5:-1], axis=1), c='C1', label = 'Right Paw', alpha=0.7)
+# plt.legend()
+# plt.title('(Cumulative) Digit Distance from Paw Center')
 
-#%% graph seperate digits and sum
-Ldist = df_digit_dist[[col for col in df_digit_dist if col[0]=='L']]
-Rdist = df_digit_dist[[col for col in df_digit_dist if col[0]=='R']]
-dist_graph(Ldist)
-dist_graph(Rdist)
+# # optional, zoom in on snippet where mouse is walking to see alternating left and right paw
+# plt.ylim([0,30])
+# plt.xlim([3500,4000])
 
-#%% align with y coordinate to show swing
-lpawy = data[[col for col in data.columns if col[0]=='L' and col[-3:] == 'w_Y']]
-rpawy = data[[col for col in data.columns if col[0]=='R' and col[-3:] == 'w_Y']]
+# # optionally, zoom in on rot/walk snippet
+# plt.xlim([1300,2400])
 
-plt.plot(lpawy, c='k', label = 'Left Paw Y', alpha=0.7)
-plt.plot(df_digit_dist['Lpaw_sum_dist'], c='C0', label='Left Paw Total Dist', alpha=0.7)
+# # plt.savefig('mouse_filter_pawdist')
 
-plt.plot(rpawy, c='y', label = 'Right Paw Y', alpha=0.7)
-plt.plot(df_digit_dist['Rpaw_sum_dist'], c='C1', label = 'Right Paw Total Dist', alpha=0.7)
-plt.legend()
-plt.title('Swing and Digit Distance Correlation')
-# plt.savefig('y_swing_dist')
+# #%% overlay all digits
+# df_digit_dist[colL].plot()
+
+# #%% graph seperate digits and sum
+# Ldist = df_digit_dist[[col for col in df_digit_dist if col[0]=='L']]
+# Rdist = df_digit_dist[[col for col in df_digit_dist if col[0]=='R']]
+# dist_graph(Ldist)
+# dist_graph(Rdist)
+
+# #%% align with y coordinate to show swing
+# lpawy = data[[col for col in data.columns if col[0]=='L' and col[-3:] == 'w_Y']]
+# rpawy = data[[col for col in data.columns if col[0]=='R' and col[-3:] == 'w_Y']]
+
+# plt.plot(lpawy, c='k', label = 'Left Paw Y', alpha=0.7)
+# plt.plot(df_digit_dist['Lpaw_sum_dist'], c='C0', label='Left Paw Total Dist', alpha=0.7)
+
+# plt.plot(rpawy, c='y', label = 'Right Paw Y', alpha=0.7)
+# plt.plot(df_digit_dist['Rpaw_sum_dist'], c='C1', label = 'Right Paw Total Dist', alpha=0.7)
+# plt.legend()
+# plt.title('Swing and Digit Distance Correlation')
+# # plt.savefig('y_swing_dist')
+
+# # optionally, zoom in on rot/walk snippet
+# plt.xlim([1300,2400])
+
+# #%% digit distances
+# df_digit_dist, colL, colR = digit_dist(data)
+
+# fig = plt.figure()
+# ax = fig.add_subplot(121)
+
+# # overlay left and right paw cumulative distances over time
+# ax.plot(df_digit_dist['Lpaw_sum_dist'], c='C0', label= 'Left Paw', alpha=0.7)
+# ax.plot(df_digit_dist['Rpaw_sum_dist'], c='C1', label = 'Right Paw', alpha=0.7)
+# plt.legend()
+# # plt.title('(Cumulative) Digit Distance from Paw Center')
+
+# # optional, zoom in on snippet where mouse is walking to see alternating left and right paw
+# plt.ylim([0,30])
+# plt.xlim([3500,4000])
+
+# # optionally, zoom in on rot/walk snippet
+# plt.xlim([1300,2400])
+
+# # plt.savefig('mouse_filter_pawdist')
+
+
+# df_digit_dist, colL, colR = digit_dist(data)
+
+# ax = fig.add_subplot(122)
+
+# # overlay left and right paw cumulative distances over time
+# ax.plot(savgol_filter(df_digit_dist['Lpaw_sum_dist'].to_numpy(), 25, 3), c='C0', label= 'Left Paw', alpha=0.7)
+# ax.plot(savgol_filter(df_digit_dist['Rpaw_sum_dist'].to_numpy(), 25, 3), c='C1', label = 'Right Paw', alpha=0.7)
+# plt.legend()
+# # plt.title('(Cumulative) Digit Distance from Paw Center')
+
+# # optional, zoom in on snippet where mouse is walking to see alternating left and right paw
+# # plt.ylim([0,30])
+# # plt.xlim([3500,4000])
+
+# # optionally, zoom in on rot/walk snippet
+# plt.xlim([1300,2400])
+
+# # plt.savefig('mouse_filter_pawdist')
+

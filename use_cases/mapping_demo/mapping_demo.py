@@ -35,6 +35,10 @@ in the IPython console usually does the trick.
 """
 
 #%% imports
+import matplotlib
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
+
 from bh3D.mapping import mapping
 from use_cases.mapping_demo import utils
 
@@ -48,7 +52,7 @@ DON'T FORGET TO UPDATE PATHS!
 
 
 
-coordPath = 'path/to/use_cases/mapping/demo_model_coordinates.csv'
+coordPath = '/Users/jimmytabet/Software/Behavior3D/use_cases/mapping/demo_model_coordinates.csv'
 
 
 
@@ -66,9 +70,9 @@ update paths to local paths in repo!
 
 
 
-DLCPaths = ['path/to/use_cases/mapping/DLC_bot.csv',
-            'path/to/use_cases/mapping/DLC_front_left.csv',
-            'path/to/use_cases/mapping/DLC_front_right.csv']
+DLCPaths = ['/Users/jimmytabet/Software/Behavior3D/use_cases/mapping/DLC_bot.csv',
+            '/Users/jimmytabet/Software/Behavior3D/use_cases/mapping/DLC_front_left.csv',
+            '/Users/jimmytabet/Software/Behavior3D/use_cases/mapping/DLC_front_right.csv']
 
 
 
@@ -81,12 +85,12 @@ if not set(model).issubset(model_options):
 cal = mapping(model, coordPath, DLCPaths, **SVR_args)
 
 #%% display calibration model results
-cal.calibration_results()
+cal.calibration_results(save='/Users/jimmytabet/Software/Behavior3D/paper_figs/cali_results.pdf')
 
 #%% map DLC data to 3D (also filters data)
 data = cal.map_to_3D()
 # save 3D reconstruction as csv
-data.to_csv('path/to/use_cases/mapping_demo/bh3D_demo_recon.csv', index=False)
+# data.to_csv('path/to/use_cases/mapping_demo/bh3D_demo_recon.csv', index=False)
 
 #%% use mapping to generate figures/animations
 '''
@@ -122,7 +126,7 @@ mean = np.mean(mean, axis=0)
 R = 216/2
 L = 89
 mean[0] += -1.5
-mean[2] += -R+1
+mean[2] += -R-10
 mean[1] += 27
 pt1 = mean.copy()
 pt2 = mean.copy()
@@ -131,7 +135,7 @@ pt2[0] += L/2
 pt1[2] += 4
 
 #%% cumulative plot of paw points
-utils.scatter(data=data, wheel_pt1=pt1, wheel_pt2=pt2, R=R, rot=False, save=False)
+data = pd.read_csv('/Users/jimmytabet/Software/Behavior3D/use_cases/mapping_demo/bh3D_demo_recon.csv')
 
 #%% animation
-anim = utils.animate(data=data, wheel_pt1=pt1, wheel_pt2=pt2, R=R, fps=70, save=False)
+onet = utils.animate(plt.figure(), data=data.iloc[1699:1700], wheel_pt1=pt1, wheel_pt2=pt2, R=R, fps=70, save=False)

@@ -10,6 +10,11 @@ Created on Sun Jun 27 21:10:41 2021
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
+
+import matplotlib
+matplotlib.rcParams['pdf.fonttype'] = 42
+matplotlib.rcParams['ps.fonttype'] = 42
 
 #%% angle function
 def angle(df, side, digit_num):
@@ -56,7 +61,7 @@ def angle(df, side, digit_num):
     return degree
 
 #%% read in 3D reconstruction
-data = pd.read_csv('3D_reconstruction.csv')
+data = pd.read_csv('bh3D_demo_recon.csv')
 
 #%% digit rotation
 # calculate digit rotation for each digit on left and right side
@@ -83,25 +88,30 @@ for d in range(1,5):
 df_rot['Rpaw_mean_rot'] = deg_r
 
 # plot left.right paw mean rotations
-plt.plot(deg_l, c='C0', label = 'Left Paw', alpha=0.7)
-plt.plot(deg_r, c='C1', label = 'Right Paw', alpha=0.7)
+plt.plot(savgol_filter(deg_l, 25, 3), c='blue', label = 'left paw', alpha=0.7)
+plt.plot(savgol_filter(deg_r, 25, 3), c='red', label = 'right paw', alpha=0.7)
 plt.legend()
 title = 'mean rot'
 plt.title(title)
 # optionally, zoom in on rot/walk snippet
-# plt.xlim([1300,2400])
+# plt.xlim([1200,2200])
+plt.ylim([20,120])
+plt.xlabel('Frame')
+plt.ylabel('Rotation (deg)')
+plt.title('Average Digit Rotation')
 
-# plt.savefig(title)
+# plt.savefig('/Users/jimmytabet/Downloads/paw_rot.pdf', dpi=300, transparent=True)
 
-#%% overlay left and right digit rotations
-for i in range(4):
-    plt.figure()
-    plt.plot(totl[i], c='C0', label = 'Left Paw', alpha=0.7)
-    plt.plot(totr[i], c='C1', label = 'Right Paw', alpha=0.7)
-    plt.legend()
-    title = 'D'+str(i+1)+' rot'
-    plt.title(title)
-    # optionally, zoom in on rot/walk snippet
-    # plt.xlim([1300,2400])
+#%%
+# #%% overlay left and right digit rotations
+# for i in range(4):
+#     plt.figure()
+#     plt.plot(savgol_filter(totl[i], 25, 3), c='C0', label = 'Left Paw', alpha=0.7)
+#     plt.plot(savgol_filter(totr[i], 25, 3), c='C1', label = 'Right Paw', alpha=0.7)
+#     plt.legend()
+#     title = 'D'+str(i+1)+' rot'
+#     plt.title(title)
+#     # optionally, zoom in on rot/walk snippet
+#     plt.xlim([1300,2400])
     
-    # plt.savefig(title)
+#     # plt.savefig(title)
