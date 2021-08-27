@@ -85,7 +85,7 @@ if not set(model).issubset(model_options):
 cal = mapping(model, coordPath, DLCPaths, **SVR_args)
 
 #%% display calibration model results
-cal.calibration_results(save='/Users/jimmytabet/Software/Behavior3D/paper_figs/cali_results.pdf')
+cal.calibration_results()#save='/Users/jimmytabet/Software/Behavior3D/paper_figs/cali_results.pdf')
 
 #%% map DLC data to 3D (also filters data)
 data = cal.map_to_3D()
