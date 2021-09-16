@@ -3,10 +3,13 @@
 """
 Created on Fri Aug 20 18:17:12 2021
 
-@author: nel-lab
+@author: jimmytabet
 """
 
-import cv2
+#%% imports and save function
+import os, cv2
+import numpy as np
+import matplotlib.pyplot as plt
 
 def save_video(file_name, movie, f_rate):
     '''
@@ -38,19 +41,15 @@ def save_video(file_name, movie, f_rate):
     # release when done
     video.release()
     
-    
-#%%
-import numpy as np
+#%% load video
+fil = '/home/nel-lab/Desktop/Sophia/0916/mouse2_trial1.npz'
 
-fil = '/home/nel-lab/Desktop/Sophia/0824/mouse1.3_trial1.2.npz'
 movie = np.load(fil)['movie']
+num_cameras = movie.shape[1]
 
-#%%
-num_cameras = 5
+#%% label cameras
 camera_fps = 70
-num_frames = 4*60*70
 
-import matplotlib.pyplot as plt
 cam_labels = []
 
 plt.imshow([[0]], cmap='gray')
@@ -67,8 +66,11 @@ for camera in range(num_cameras):
     
 plt.close('all')
 
-#%%
-file_names = [f'/home/nel-lab/Desktop/Sophia/0824/mouse1.3_trial1.2_{lab}.avi' for lab in cam_labels]
+#%% save all videos
+file_names = [f'{os.path.splitext(fil)[0]}_{lab}.avi' for lab in cam_labels]
 
 for num, name in enumerate(file_names):
     save_video(file_name=name, movie=movie[:, num], f_rate=camera_fps)
+    
+print('files saved:')
+print(np.array(file_names))
