@@ -382,6 +382,8 @@ class mapping():
             plt.savefig('calibration results', dpi=300)
         else:
             pass
+        
+        return preds_all
                 
     def raw_model(self):
         '''
