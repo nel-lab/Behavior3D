@@ -10,7 +10,8 @@ Created on Sun Jan  3 01:13:22 2021
 import numpy as np
 from collections import Counter
 
-mov = np.load('/home/nel/Desktop/Cali Cube/calibration_cube.npy')
+dat = np.load('/home/nel-lab/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/calicube.npz')
+mov = dat['movie']
 maxs = np.max(mov, axis=(2,3))
 
 #%% helper functions
@@ -45,26 +46,31 @@ def next_num(current, target):
 
 #%% define recording constants
 fps = 50
-d_on = 0.050
-d_off = 0.100
+d_on = 0.150
+d_off = 0.050
 t_on = fps*d_on
 t_off = fps*d_off
 t_total = t_on+t_off
 
 #%% shorten movie
 # get frames where all cameras are low (max intensity < 100)
-low = Counter(np.where(maxs<100)[0])
+low = Counter(np.where(maxs<150)[0])
 low_arr = np.array(list(low.items()))
 low_all_cams = low_arr[low_arr[:,1]==maxs.shape[1]][:,0]
 
 # start = first frame where *a* camera's pixel is at max (usually 255)
 start = np.argwhere(maxs==maxs.max())[0][0]
 # end = first frame where *all* cameras are low for a 5 seconds (indicates cube has stopped)
-end = n_long(low_all_cams, fps*5)[0]
+# end = n_long(low_all_cams, fps*5)[0]
+end = int(start+8**3*t_total)
 
-# shorten mov and maxs
+import matplotlib.pyplot as plt
+plt.plot(maxs, '.')
+plt.vlines([start, end], 0, 255, color='k')
+
+#%% shorten mov and maxs
 mov1 = mov[start:end+1]
-del mov
+# del mov
 maxs1 = maxs[start:end+1]
 
 #%% find frames of max pixel intensity (indicates LED is on)
@@ -79,7 +85,7 @@ max_frames = np.array([int(round(np.mean(i))) for i in range_uniq])
 
 #%% fix missed frames
 # see if diff between max_frames is larger than t_total + a few frames (indicates missed frame)
-diff = np.where(np.diff(max_frames) > int(np.ceil(t_total))+3)[0]
+diff = np.where(np.diff(max_frames) > int(np.ceil(t_total))+2)[0]
 # initialize tries for next_num function
 tries = []
 # loop until no more large diffs to fix/added all missed frames
@@ -197,52 +203,54 @@ for z in range(8):
 big = np.zeros([512,10])
 for cam in range(5):
     for frame in range(512):
-        if max_maxs[frame,cam]>=255:
+        if max_maxs[frame,cam]>=190:
             max_pt = np.mean(np.argwhere(max_mov[frame,cam] == max_maxs[frame,cam]), axis=0)
             big[frame,2*cam:2*cam+2] = max_pt
         else:
             big[frame,2*cam:2*cam+2] = [np.nan, np.nan]
             
 #%% save calibration  array
-trial = '255'
+trial = '190'
 final = np.hstack([big, real])
-np.save(f'/home/nel/Desktop/Cali Cube/final_{trial}.npy', final)
+np.save(f'/home/nel-lab/Desktop/Jimmy/new_cali_cube/final_{trial}.npy', final)
 
 #%% impute over all nan values and save as csv for BH3D code
-final = np.load(f'/home/nel/Desktop/Cali Cube/final_{trial}.npy')
-from sklearn.experimental import enable_iterative_imputer
-from sklearn.impute import IterativeImputer
-imp = IterativeImputer(random_state=0, max_iter=500)
-final = imp.fit_transform(final)
+final = np.load(f'/home/nel-lab/Desktop/Jimmy/new_cali_cube/final_{trial}.npy')
+# from sklearn.experimental import enable_iterative_imputer
+# from sklearn.impute import IterativeImputer
+# imp = IterativeImputer(random_state=0, max_iter=500)
+# final = imp.fit_transform(final)
 
 import pandas as pd
-final_df = pd.DataFrame(final, columns = ['FL_x', 'FL_y', 'FR_x', 'FR_y', 'BOT_x', 'BOT_y', 'BL_x', 'BL_y',
-       'BR_x', 'BR_y', 'X', 'Y', 'Z'])
-# final_df.dropna(inplace = True)
-final_df.to_csv(f'/home/nel/Desktop/Cali Cube/try_{trial}.csv', index=False)
+final_df = pd.DataFrame(final, columns = ['BOT_x', 'BOT_y', 'BR_x', 'BR_y', 'FR_x', 'FR_y', 'FL_x', 'FL_y',
+       'BL_x', 'BL_y', 'X', 'Y', 'Z'])
+final_df.dropna(inplace = True)
+final_df.to_csv(f'/home/nel-lab/Desktop/Jimmy/new_cali_cube/try_{trial}.csv', index=False)
 
 #%% test using BH3D calibration
 from bh3D.mapping import mapping
 import pandas as pd
 
-coordPath = '/home/nel/Desktop/Cali Cube/try_255.csv'
+coordPath = '/home/nel-lab/Desktop/Jimmy/new_cali_cube/try_190.csv'
 # print camera labels and order to help with model and DLCPaths below
 model_options = pd.read_csv(coordPath).columns
 model_options = [opt[:-2] for opt in model_options[:-3][::2]]
 print('Cameras labels to reference when defining model and DLCPaths variables below:\n', model_options)
 
 #%% run calibration
-model = ['BOT','FL','FR', 'BL', 'BR']
+# model = ['BOT','FL','FR', 'BL', 'BR']
+model = ['BOT', 'FR', 'FL']
 
 # can set dummy DLC paths as we will not use them
-DLCPaths = ['path/to/use_cases/mapping/DLC_bot.csv',
-            'path/to/use_cases/mapping/DLC_front_left.csv',
-            'path/to/use_cases/mapping/DLC_front_right.csv']
+DLCPaths = ['/home/nel-lab/Desktop/Sophia/0917Project-sophia-2021-09-20/videos/mouse2_trial3_botDLC_mobnet_100_0917ProjectSep20shuffle1_200000.csv',
+            '/home/nel-lab/Desktop/Sophia/0917Project-sophia-2021-09-20/videos/mouse2_trial3_frDLC_mobnet_100_0917ProjectSep20shuffle1_200000.csv',
+            '/home/nel-lab/Desktop/Sophia/0917Project-sophia-2021-09-20/videos/mouse2_trial3_flDLC_mobnet_100_0917ProjectSep20shuffle1_200000.csv']
 
 SVR_args = {'kernel':"poly", 'degree':2, 'C':1500}
 
 cal = mapping(model, coordPath, DLCPaths, **SVR_args)
 results = cal.calibration_results()
+data = cal.map_to_3D()
 
 #%% get errors and plot hist
 import matplotlib.pyplot as plt
