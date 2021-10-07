@@ -6,43 +6,14 @@ Created on Sun Jan  3 01:13:22 2021
 @author: jimmytabet
 """
 
+#%% ANALYZE
 #%% import modules, load data, and get max pixel values (takes time!)
 import numpy as np
-from collections import Counter
+import matplotlib.pyplot as plt
 
-dat = np.load('/home/nel-lab/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/calicube.npz')
+dat = np.load('/home/nel/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/trial1.npz')
 mov = dat['movie']
 maxs = np.max(mov, axis=(2,3))
-
-#%% helper functions
-# return array of n-long consecutive integers/indices
-def n_long(array, n):
-    new_array = []
-    for i in range(array.size):
-        if array[i]+n-1 in array and i+n-1 == int(np.where(array == array[i]+n-1)[0]):
-            new_array += list(np.arange(array[i], array[i]+n))
-    
-    return np.unique(new_array)
-
-# return list of start/end values of consecutive integers
-def ranges(nums):
-    nums = sorted(set(nums))
-    gaps = [[s, e] for s, e in zip(nums, nums[1:]) if s+1 < e]
-    edges = iter(nums[:1] + sum(gaps, []) + nums[-1:])
-    return list(zip(edges, edges))
-
-# return integer of next number to use when adding frames that were skipped
-#   alternates between integers so tries approx. target value
-def next_num(current, target):
-    low = int(np.floor(target))
-    high = low + 1
-    if len(current)==0 or np.mean(current) >= target:
-        num = low
-    else:
-        num = high
-
-    current.append(num)
-    return(num)
 
 #%% define recording constants
 fps = 50
@@ -53,73 +24,40 @@ t_off = fps*d_off
 t_total = t_on+t_off
 
 #%% shorten movie
-# get frames where all cameras are low (max intensity < 100)
-low = Counter(np.where(maxs<150)[0])
-low_arr = np.array(list(low.items()))
-low_all_cams = low_arr[low_arr[:,1]==maxs.shape[1]][:,0]
-
 # start = first frame where *a* camera's pixel is at max (usually 255)
 start = np.argwhere(maxs==maxs.max())[0][0]
-# end = first frame where *all* cameras are low for a 5 seconds (indicates cube has stopped)
-# end = n_long(low_all_cams, fps*5)[0]
+
+# end = frame number after lighting all LEDs (8^3 * t_total)
 end = int(start+8**3*t_total)
 
-import matplotlib.pyplot as plt
+# visualize start/end frame
 plt.plot(maxs, '.')
 plt.vlines([start, end], 0, 255, color='k')
 
 #%% shorten mov and maxs
 mov1 = mov[start:end+1]
-# del mov
 maxs1 = maxs[start:end+1]
 
-#%% find frames of max pixel intensity (indicates LED is on)
-# frames of max intensty for all cameras
-ids = np.argwhere(maxs1==maxs.max())
-# unique frames
-uniq = np.unique(ids[:,0])
-# ranges of unique frames
-range_uniq = ranges(uniq)
-# mean frame in each range
-max_frames = np.array([int(round(np.mean(i))) for i in range_uniq])
+#%% shorten movies to just peak frames
+# peak frame will be every t_total frames starting at t_total/2
+max_frames = np.arange(t_total/2, t_total/2+8**3*t_total, t_total).astype(int)
+max_mov = mov1[max_frames]
+max_maxs = maxs1[max_frames]
 
-#%% fix missed frames
-# see if diff between max_frames is larger than t_total + a few frames (indicates missed frame)
-diff = np.where(np.diff(max_frames) > int(np.ceil(t_total))+2)[0]
-# initialize tries for next_num function
-tries = []
-# loop until no more large diffs to fix/added all missed frames
-while len(diff):
-    # track how many frames added so frames are inserted in proper place
-    counter = 1
-    # insert missed frames
-    for i in range(len(diff)):
-        max_frames = np.insert(max_frames, diff[i]+counter, max_frames[diff[i]+i]+next_num(tries, t_total))
-        counter += 1
-    
-    # update diff
-    diff = np.where(np.diff(max_frames) > int(np.ceil(t_total))+3)[0]
-
-# if there are not 512 frames, something went wrong!
-if max_frames.size != 512: print('something went wrong!\n\tframes:', max_frames.size)
+#%% EXPLORE
+#%% set cam and thresh for EDA
+cam = 0
+thresh = 250
 
 #%% create movie to check/validate
 import caiman as cm
 
 for i in range (5):
-    cam = i
-    cm_mov = cm.movie(mov1[max_frames,cam])
+    cm_mov = cm.movie(max_mov[:,i])
     cm_mov.fr = fps
-    cm_mov.save(f'/home/nel/Desktop/Cali Cube/{cam}.avi')
-
-#%% EXPLORE
-import matplotlib.pyplot as plt
-
-max_mov = mov1[max_frames]
-max_maxs = maxs1[max_frames]
+    cm_mov.save(f'/home/nel/Desktop/Cali Cube 2/{i}.avi')
 
 #%% see max values for cam
-cam = 0
 plt.plot(max_maxs[:,cam])
 
 #%% see unique max values
@@ -130,14 +68,14 @@ plt.plot(cam_max[::-1])
 i=0
 frame = 0
 while i < 10:
-    if max_maxs[frame,cam] <= 200:
+    if max_maxs[frame,cam] <= thresh:
         plt.imshow(max_mov[frame,cam])
         plt.pause(0.5)
         i += 1
     frame += 1
 
 #%% save cm movie of frames where max < thresh
-temp = np.where(max_maxs[:,3] <= 190)[0]
+temp = np.where(max_maxs[:,cam] <= thresh)[0]
 print(temp.shape)
 
 temp_mov = cm.movie(max_mov[temp,cam])
@@ -151,46 +89,36 @@ for cam in range(5):
         lower.append(np.sum(max_maxs[:,cam]<=i))
 
     plt.plot(lower, np.arange(256), label = str(cam))
-    plt.xlim([512,0])
-    plt.legend()
+    plt.xlim([8**3,0])
     
-plt.hlines(190,0,512)
+plt.hlines(thresh,0,8**3, color='k', label = 'thresh value')
+plt.legend()
 
 #%% plot interest point if max > thresh
 cam = 0
 
-for frame in range(10):#(512):
+for frame in range(8**3):
     plt.cla()
     plt.imshow(max_mov[frame,cam])
-    if max_maxs[frame,cam]>=190:
+    if max_maxs[frame,cam]>=thresh:
         max_pt = np.mean(np.argwhere(max_mov[frame,cam] == max_maxs[frame,cam]), axis=0)
         plt.plot(*max_pt[::-1], 'ro')
-    plt.pause(0.3)
-    
-
-# turn to animation ... WIP
-# def update(frame):
-#     fig.cla()
-#     plt.imshow(max_mov[frame,cam])
-#     if max_maxs[frame,cam]>=190:
-#         max_pt = np.mean(np.argwhere(max_mov[frame,cam] == max_maxs[frame,cam]), axis=0)
-#         plt.plot(*max_pt[::-1], 'ro')   
-        
-# fig = plt.figure()
+    plt.pause(0.5)
 
 #%% plot scatter of all points above thresh
 cam = 0
 
-for frame in range(512):
-    if max_maxs[frame,cam]>=255:
+for frame in range(8**3):
+    if max_maxs[frame,cam]>=thresh:
         max_pt = np.mean(np.argwhere(max_mov[frame,cam] == max_maxs[frame,cam]), axis=0)
         plt.plot(max_pt[1], 480-max_pt[0], 'ro')    
         
 plt.xlim([0,640])
 plt.ylim([0,480])
 
+#%% CREATE CSV
 #%% create ground truth array
-real = np.zeros([512,3])
+real = np.zeros([8**3,3])
 row = 0
 for z in range(8):
     for y in range(8):
@@ -200,38 +128,52 @@ for z in range(8):
                         
 #%% create array of location of pixel > thresh for all cams
 #   nan value if below thresh
-big = np.zeros([512,10])
+thresh = 250
+big = np.zeros([8**3,10])
 for cam in range(5):
-    for frame in range(512):
-        if max_maxs[frame,cam]>=190:
+    for frame in range(8**3):
+        if max_maxs[frame,cam]>=thresh:
             max_pt = np.mean(np.argwhere(max_mov[frame,cam] == max_maxs[frame,cam]), axis=0)
             big[frame,2*cam:2*cam+2] = max_pt
         else:
             big[frame,2*cam:2*cam+2] = [np.nan, np.nan]
             
 #%% save calibration  array
-trial = '190'
 final = np.hstack([big, real])
-np.save(f'/home/nel-lab/Desktop/Jimmy/new_cali_cube/final_{trial}.npy', final)
+# np.save(f'/home/nel-lab/Desktop/Jimmy/new_cali_cube/final_{thresh}.npy', final)
+# final = np.load(f'/home/nel-lab/Desktop/Jimmy/new_cali_cube/final_{thresh}.npy')
 
-#%% impute over all nan values and save as csv for BH3D code
-final = np.load(f'/home/nel-lab/Desktop/Jimmy/new_cali_cube/final_{trial}.npy')
-# from sklearn.experimental import enable_iterative_imputer
-# from sklearn.impute import IterativeImputer
-# imp = IterativeImputer(random_state=0, max_iter=500)
-# final = imp.fit_transform(final)
+#%% handle nan values (drop/impute) and save as csv for BH3D code
+# drop row if > num_cam cameras have nan value, then iterate over nans
+num_cam_missing = 1
+final = final[np.isnan(final).sum(axis=1) <= num_cam_missing*2]
 
+# impute over remianing nan values
+from sklearn.experimental import enable_iterative_imputer
+from sklearn.impute import IterativeImputer
+imp = IterativeImputer(random_state=0, max_iter=1000)
+final = imp.fit_transform(final)
+
+# create df with correct camera columns
 import pandas as pd
 final_df = pd.DataFrame(final, columns = ['BOT_x', 'BOT_y', 'BR_x', 'BR_y', 'FR_x', 'FR_y', 'FL_x', 'FL_y',
        'BL_x', 'BL_y', 'X', 'Y', 'Z'])
+
+# drop all remaining nans for final csv
 final_df.dropna(inplace = True)
-final_df.to_csv(f'/home/nel-lab/Desktop/Jimmy/new_cali_cube/try_{trial}.csv', index=False)
+
+# drop outlier points on edge of cube (through visual inspection of next cell block)
+final_df = final_df[final_df.X!=7]
+
+print(final_df.shape)
+
+final_df.to_csv(f'/home/nel/Desktop/Cali Cube 2/cali_{thresh}_imp.csv', index=False)
 
 #%% test using BH3D calibration
 from bh3D.mapping import mapping
 import pandas as pd
 
-coordPath = '/home/nel-lab/Desktop/Jimmy/new_cali_cube/try_190.csv'
+coordPath = '/home/nel/Desktop/Cali Cube 2/cali_250_imp.csv'
 # print camera labels and order to help with model and DLCPaths below
 model_options = pd.read_csv(coordPath).columns
 model_options = [opt[:-2] for opt in model_options[:-3][::2]]
@@ -239,35 +181,114 @@ print('Cameras labels to reference when defining model and DLCPaths variables be
 
 #%% run calibration
 # model = ['BOT','FL','FR', 'BL', 'BR']
-model = ['BOT', 'FR', 'FL']
+model = ['BOT', 'BR']
 
 # can set dummy DLC paths as we will not use them
-DLCPaths = ['/home/nel-lab/Desktop/Sophia/0917Project-sophia-2021-09-20/videos/mouse2_trial3_botDLC_mobnet_100_0917ProjectSep20shuffle1_200000.csv',
-            '/home/nel-lab/Desktop/Sophia/0917Project-sophia-2021-09-20/videos/mouse2_trial3_frDLC_mobnet_100_0917ProjectSep20shuffle1_200000.csv',
-            '/home/nel-lab/Desktop/Sophia/0917Project-sophia-2021-09-20/videos/mouse2_trial3_flDLC_mobnet_100_0917ProjectSep20shuffle1_200000.csv']
+DLCPaths = ['']
 
 SVR_args = {'kernel':"poly", 'degree':2, 'C':1500}
 
 cal = mapping(model, coordPath, DLCPaths, **SVR_args)
 results = cal.calibration_results()
-data = cal.map_to_3D()
 
 #%% get errors and plot hist
 import matplotlib.pyplot as plt
 
 bins = 50
-
-# errors = np.linalg.norm(real-results, axis=1)
-errors = np.sqrt(np.sum((real-results)**2, axis=1))
+gt = pd.read_csv(coordPath).iloc[:,-3:]
+errors = np.linalg.norm(gt-results, axis=1)
 plt.hist(errors, bins)
 # plt.xlim(errors.min(), errors.max())
 # plt.xticks(np.linspace(errors.min(),errors.max(),10))
 # plt.xticks(np.linspace(0,errors.max(),10))
-plt.xticks(np.arange(0,errors.max()+.02,.02))
+plt.xticks(np.arange(0,errors.max()+.05,.05))
 
-plt.title(f'Histogram of Errors, Thresh = {trial}, {bins} bins')
+plt.title(f'Histogram of Errors, Thresh = {thresh}')
 
-#%% OLD - testing in lab
+#%% PREVIOUS WORK
+#%% OLD METHOD TO FIND MAX FRAMES BASED ON PIXEL INTENSITY
+# from collections import Counter
+
+# #%% helper functions
+# # return array of n-long consecutive integers/indices
+# def n_long(array, n):
+#     new_array = []
+#     for i in range(array.size):
+#         if array[i]+n-1 in array and i+n-1 == int(np.where(array == array[i]+n-1)[0]):
+#             new_array += list(np.arange(array[i], array[i]+n))
+    
+#     return np.unique(new_array)
+
+# # return list of start/end values of consecutive integers
+# def ranges(nums):
+#     nums = sorted(set(nums))
+#     gaps = [[s, e] for s, e in zip(nums, nums[1:]) if s+1 < e]
+#     edges = iter(nums[:1] + sum(gaps, []) + nums[-1:])
+#     return list(zip(edges, edges))
+
+# # return integer of next number to use when adding frames that were skipped
+# #   alternates between integers so tries approx. target value
+# def next_num(current, target):
+#     low = int(np.floor(target))
+#     high = low + 1
+#     if len(current)==0 or np.mean(current) >= target:
+#         num = low
+#     else:
+#         num = high
+
+#     current.append(num)
+#     return(num)
+
+# # get frames where all cameras are low (max intensity < 100)
+# low = Counter(np.where(maxs<150)[0])
+# low_arr = np.array(list(low.items()))
+# low_all_cams = low_arr[low_arr[:,1]==maxs.shape[1]][:,0]
+
+# # start = first frame where *a* camera's pixel is at max (usually 255)
+# start = np.argwhere(maxs==maxs.max())[0][0]
+# # end = first frame where *all* cameras are low for a 5 seconds (indicates cube has stopped)
+# # end = n_long(low_all_cams, fps*5)[0]
+
+# #%% find frames of max pixel intensity (indicates LED is on)
+# # frames of max intensty for all cameras
+# ids = np.argwhere(maxs1==maxs.max())
+# # unique frames
+# uniq = np.unique(ids[:,0])
+# # ranges of unique frames
+# range_uniq = ranges(uniq)
+# # mean frame in each range
+# max_frames = np.array([int(round(np.mean(i))) for i in range_uniq])
+
+# #%% fix missed frames
+# # see if diff between max_frames is larger than t_total + a few frames (indicates missed frame)
+# diff = np.where(np.diff(max_frames) > int(np.ceil(t_total))+2)[0]
+# # initialize tries for next_num function
+# tries = []
+# # loop until no more large diffs to fix/added all missed frames
+# while len(diff):
+#     # track how many frames added so frames are inserted in proper place
+#     counter = 1
+#     # insert missed frames
+#     for i in range(len(diff)):
+#         max_frames = np.insert(max_frames, diff[i]+counter, max_frames[diff[i]+i]+next_num(tries, t_total))
+#         counter += 1
+    
+#     # update diff
+#     diff = np.where(np.diff(max_frames) > int(np.ceil(t_total))+3)[0]
+
+# # if there are not 8**3 frames, something went wrong!
+# if max_frames.size != 8**3: print('something went wrong!\n\tframes:', max_frames.size)
+
+# #%% inspect/alter max_frames
+# print(max_frames)
+# print(end-start)
+
+# #max_frames = np.append(max_frames, int(max_frames[-1]+t_total))
+# max_frames = np.arange(4, end-start, 10)
+
+# assert max_frames.size == 8**3
+
+#%% OLD METHOD TO LOCATE MAX PIXEL USING BLUR
 # import cv2
 # mov = np.load('Users/jimmytabet/calibration_cube.npy')
 
