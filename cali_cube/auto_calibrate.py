@@ -11,7 +11,7 @@ Created on Sun Jan  3 01:13:22 2021
 import numpy as np
 import matplotlib.pyplot as plt
 
-dat = np.load('/home/nel/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/trial1.npz')
+dat = np.load('/home/nel/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/calicube.npz')
 mov = dat['movie']
 maxs = np.max(mov, axis=(2,3))
 
@@ -55,7 +55,7 @@ import caiman as cm
 for i in range (5):
     cm_mov = cm.movie(max_mov[:,i])
     cm_mov.fr = fps
-    cm_mov.save(f'/home/nel/Desktop/Cali Cube 2/{i}.avi')
+    cm_mov.save(f'/home/nel/Desktop/Cali Cube/{i}.avi')
 
 #%% see max values for cam
 plt.plot(max_maxs[:,cam])
@@ -103,7 +103,7 @@ for frame in range(8**3):
     if max_maxs[frame,cam]>=thresh:
         max_pt = np.mean(np.argwhere(max_mov[frame,cam] == max_maxs[frame,cam]), axis=0)
         plt.plot(*max_pt[::-1], 'ro')
-    plt.pause(0.5)
+    plt.pause(.01)
 
 #%% plot scatter of all points above thresh
 cam = 0
@@ -125,7 +125,31 @@ for z in range(8):
         for x in range(8):
             real[row,:] = [x,y,z]
             row +=1
-                        
+            
+# convert inches to mm
+real *= 25.4
+
+#%% rotate
+# # rotate 45 degrees counterclockwise and invert z axis
+# rot = np.array([[2**-.5, -2**-.5, 0],
+#                 [2**-.5, 2**-.5, 0],
+#                 [0,0,-1]])
+
+# trans = real@rot
+
+# # adjust points to first quadrant
+# trans[:,-1] += 7
+# trans[:,1] += 4*2**0.5
+
+# # view new coord axis
+# fig = plt.figure()
+# ax = fig.add_subplot(projection='3d')
+# ax.scatter(trans[:,0], trans[:,1], trans[:,2])
+
+# ax.quiver(0,0,0,0,0,1,color='k')
+# ax.quiver(0,0,0,0,1,0,color='k')
+# ax.quiver(0,0,0,1,0,0,color='k')
+
 #%% create array of location of pixel > thresh for all cams
 #   nan value if below thresh
 thresh = 250
@@ -134,7 +158,7 @@ for cam in range(5):
     for frame in range(8**3):
         if max_maxs[frame,cam]>=thresh:
             max_pt = np.mean(np.argwhere(max_mov[frame,cam] == max_maxs[frame,cam]), axis=0)
-            big[frame,2*cam:2*cam+2] = max_pt
+            big[frame,2*cam:2*cam+2] = max_pt[::-1]
         else:
             big[frame,2*cam:2*cam+2] = [np.nan, np.nan]
             
@@ -142,6 +166,16 @@ for cam in range(5):
 final = np.hstack([big, real])
 # np.save(f'/home/nel-lab/Desktop/Jimmy/new_cali_cube/final_{thresh}.npy', final)
 # final = np.load(f'/home/nel-lab/Desktop/Jimmy/new_cali_cube/final_{thresh}.npy')
+
+#%% plot original points in each camera
+# fig = plt.figure()
+# for i in range(5):
+#     ax = plt.subplot(2,3,i+1)
+#     ax.plot(final[:,2*i],final[:,2*i+1],'o')
+    
+# # plot ground truth cube
+# ax = fig.add_subplot(2,3,6,projection='3d')
+# ax.plot(final[:,-3],final[:,-2],final[:,-1],'.')
 
 #%% handle nan values (drop/impute) and save as csv for BH3D code
 # drop row if > num_cam cameras have nan value, then iterate over nans
@@ -163,17 +197,24 @@ final_df = pd.DataFrame(final, columns = ['BOT_x', 'BOT_y', 'BR_x', 'BR_y', 'FR_
 final_df.dropna(inplace = True)
 
 # drop outlier points on edge of cube (through visual inspection of next cell block)
-final_df = final_df[final_df.X!=7]
+final_df = final_df[final_df.X < 7*25.4]
 
 print(final_df.shape)
 
-final_df.to_csv(f'/home/nel/Desktop/Cali Cube 2/cali_{thresh}_imp.csv', index=False)
+final_df.to_csv(f'/home/nel/Desktop/Cali Cube/cali_{thresh}.csv', index=False)
 
+#%% plot imputed points in each camera
+# for i in range(5):
+#     ax = plt.subplot(2,3,i+1)
+#     ax.plot(final[:,2*i],final[:,2*i+1],'.')
+    
 #%% test using BH3D calibration
 from bh3D.mapping import mapping
 import pandas as pd
 
-coordPath = '/home/nel/Desktop/Cali Cube 2/cali_250_imp.csv'
+thresh=250
+
+coordPath = f'/home/nel/Desktop/Cali Cube/cali_{thresh}.csv'
 # print camera labels and order to help with model and DLCPaths below
 model_options = pd.read_csv(coordPath).columns
 model_options = [opt[:-2] for opt in model_options[:-3][::2]]
@@ -181,18 +222,19 @@ print('Cameras labels to reference when defining model and DLCPaths variables be
 
 #%% run calibration
 # model = ['BOT','FL','FR', 'BL', 'BR']
-model = ['BOT', 'BR']
+model = ['BOT', 'FL', 'FR']
 
 # can set dummy DLC paths as we will not use them
 DLCPaths = ['']
 
-SVR_args = {'kernel':"poly", 'degree':2, 'C':1500}
+SVR_args = {'kernel':"rbf", 'C':15000}
 
 cal = mapping(model, coordPath, DLCPaths, **SVR_args)
 results = cal.calibration_results()
 
 #%% get errors and plot hist
 import matplotlib.pyplot as plt
+import numpy as np
 
 bins = 50
 gt = pd.read_csv(coordPath).iloc[:,-3:]
