@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jan 18 10:30:44 2022
+
+@author: sophi
+"""
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -11,9 +17,9 @@ Created on Sun Jan  3 01:13:22 2021
 import numpy as np
 import matplotlib.pyplot as plt
 
-dat = np.load('C:/Users/sophi/Downloads/calicube_10_28.npz')
+dat = np.load('C:/Users/sophi/Downloads/original_test_calibration_cube.npy')
 # data is video of the cube lighting up in form of npz file
-mov = dat['movie']
+mov = dat #['movie']
 # shape = (6000, 5, 480, 640) 480 and 640 are dimensions of image for each frame
 #values in 480x640 array correspond to the pixel values/ intensity in each position
 # 30000 2D arrays that are 480x640 
@@ -298,7 +304,6 @@ final_df = final_df[final_df.X < 7*25.4]
 print('final dataframe shape is', final_df.shape)
 
 #save csv to computer
-#critical line for cali output
 final_df.to_csv(f'C:/Users/sophi/Downloads/Data/cali_{thresh}.csv', index=False)
 
 #%% plot imputed points in each camera
@@ -322,7 +327,6 @@ model_options = [opt[:-2] for opt in model_options[:-3][::2]]
 #print('Cameras labels to reference when defining model and DLCPaths variables below:\n', model_options)
 
 #%% run calibration
-# need 2 cameras at minimum, 
 # model = ['BOT','FL','FR', 'BL', 'BR']
 model = ['BOT', 'FL', 'FR']
 
@@ -333,7 +337,6 @@ DLCPaths = ['']
 #in this step we are not doing that yet, so just use empty string
 
 SVR_args = {'kernel':"rbf", 'C':15000}
-#super high z = high regulization
 
 cal = mapping(model, coordPath, DLCPaths, **SVR_args)
 #from Github of mapping code
@@ -363,7 +366,7 @@ plt.hist(errors, bins)
 # plt.xticks(np.linspace(0,errors.max(),10))
 
 plt.xticks(np.arange(0,errors.max()+.05,.05))
-plt.xlabel('mm')
+plt.xlabel('Inches')
 plt.ylabel("Frequency")
 plt.title(f'Histogram of Errors, Thresh = {thresh}')
 
