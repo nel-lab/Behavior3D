@@ -39,10 +39,10 @@ def digit_dist(df):
     '''
 
     # seperate into paw base and digits
-    baseL = [col for col in df.columns if col[0] == 'L' and col[5] != 'D']
-    baseR = [col for col in df.columns if col[0] == 'R' and col[5] != 'D']
-    digitL = [col for col in df.columns if col[0] == 'L' and col[5] == 'D']
-    digitR = [col for col in df.columns if col[0] == 'R' and col[5] == 'D']
+    baseL = [col for col in df.columns if col[1] == 'L' and col[2] == 'p']
+    baseR = [col for col in df.columns if col[1] == 'R' and col[2] == 'p']
+    digitL = [col for col in df.columns if col[1] == 'L' and col[2] == 'd']
+    digitR = [col for col in df.columns if col[1] == 'R' and col[2] == 'd']
 
     # create new df and empty col lists
     df_dist = pd.DataFrame()
@@ -82,7 +82,7 @@ def dist_graph(df):
     '''
 
     # reorder: cum dist, D1-4 dist
-    if df.columns[0][5] == 'D':
+    if df.columns[0][2] == 'd':
         cols = list(df.columns)
         cols = [cols[-1]]+cols[:-1]
         df = df[cols]
@@ -90,10 +90,10 @@ def dist_graph(df):
         cols = df.columns
 
     # set color scheme for left vs right paw
-    if df.columns[0][0] == 'L':
+    if df.columns[0][1] == 'L':
         paw = 'C0'
         cmap = cm.Blues(np.linspace(.25,.75,4))
-    elif df.columns[0][0] == 'R':
+    elif df.columns[0][1] == 'R':
         paw = 'C1'
         cmap = cm.Oranges(np.linspace(.25,.75,4))
     else:
@@ -115,7 +115,7 @@ def dist_graph(df):
     fig.tight_layout()
     
 #%% read in 3D reconstruction
-data = pd.read_csv('bh3D_demo_recon.csv')
+data = pd.read_csv('/home/nel/Desktop/recon.csv')
 
 #%% digit distances
 df_digit_dist, colL, colR = digit_dist(data)
@@ -130,8 +130,8 @@ plt.legend()
 # plt.title('(Cumulative) Digit Distance from Paw Center')
 
 # optional, zoom in on snippet where mouse is walking to see alternating left and right paw
-plt.ylim([0,10])
-plt.xlim([4000,5000])
+# plt.ylim([0,10])
+# plt.xlim([4000,5000])
 
 # optionally, zoom in on rot/walk snippet
 # plt.xlim([1300,2400])

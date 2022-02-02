@@ -11,7 +11,7 @@ Created on Sun Jan  3 01:13:22 2021
 import numpy as np
 import matplotlib.pyplot as plt
 
-dat = np.load('/home/nel/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/calicube.npz')
+dat = np.load('/home/nel/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/calicube_10_28.npz')
 mov = dat['movie']
 maxs = np.max(mov, axis=(2,3))
 
@@ -117,38 +117,59 @@ plt.xlim([0,640])
 plt.ylim([0,480])
 
 #%% CREATE CSV
-#%% create ground truth array
-real = np.zeros([8**3,3])
-row = 0
-for z in range(8):
-    for y in range(8):
-        for x in range(8):
-            real[row,:] = [x,y,z]
-            row +=1
+#%% create generic ground truth array
+# real = np.zeros([8**3,3])
+# row = 0
+# for z in range(8):
+#     for y in range(8):
+#         for x in range(8):
+#             real[row,:] = [x,y,z]
+#             row +=1
             
+# # convert inches to mm
+# real *= 25.4
+
+#%% create rotated ground truth array
+# rotate 45 degrees counterclockwise
+rot = np.array([[2**-.5, -2**-.5, 0],
+                [2**-.5,  2**-.5, 0],
+                [     0,       0, 1]])
+
+# create ground truth array
+# number of points per side
+n = 8
+# init array
+real = np.zeros([n**3,3])
+# init row counter
+row = 0
+
+# calibration cube chages as follows: y axis, z axis, x axis
+for x in range(n):
+    # reverse z axis (cube is orientated down)
+    for z in reversed(range(n)):
+        for y in range(n):
+            # add point to real array
+            real[row,:] = [x,y,z]
+            # increment row
+            row +=1
+
+# rotate points
+real = real@rot
+
 # convert inches to mm
 real *= 25.4
 
-#%% rotate
-# # rotate 45 degrees counterclockwise and invert z axis
-# rot = np.array([[2**-.5, -2**-.5, 0],
-#                 [2**-.5, 2**-.5, 0],
-#                 [0,0,-1]])
-
-# trans = real@rot
-
-# # adjust points to first quadrant
-# trans[:,-1] += 7
-# trans[:,1] += 4*2**0.5
-
-# # view new coord axis
-# fig = plt.figure()
-# ax = fig.add_subplot(projection='3d')
-# ax.scatter(trans[:,0], trans[:,1], trans[:,2])
-
-# ax.quiver(0,0,0,0,0,1,color='k')
-# ax.quiver(0,0,0,0,1,0,color='k')
-# ax.quiver(0,0,0,1,0,0,color='k')
+# view rotated ground truth array
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+ax.set_xlabel('x')
+ax.set_ylabel('y')
+ax.set_zlabel('z')
+x,y,z = real[:,0], real[:,1], real[:,2]
+ax.scatter(x[0], y[0], z[0], c='r', label='origin')
+ax.scatter(x[1:], y[1:], z[1:])
+ax.quiver(x[:-1], y[:-1], z[:-1], np.diff(x), np.diff(y), np.diff(z), length = 0.5)
+plt.legend()
 
 #%% create array of location of pixel > thresh for all cams
 #   nan value if below thresh
@@ -197,11 +218,11 @@ final_df = pd.DataFrame(final, columns = ['BOT_x', 'BOT_y', 'BR_x', 'BR_y', 'FR_
 final_df.dropna(inplace = True)
 
 # drop outlier points on edge of cube (through visual inspection of next cell block)
-final_df = final_df[final_df.X < 7*25.4]
+# final_df = final_df[final_df.X < 7*25.4]
 
 print(final_df.shape)
 
-final_df.to_csv(f'/home/nel/Desktop/Cali Cube/cali_{thresh}.csv', index=False)
+final_df.to_csv(f'/home/nel/Desktop/Behavior1027_cropped/cali_{thresh}.csv', index=False)
 
 #%% plot imputed points in each camera
 # for i in range(5):
@@ -214,7 +235,7 @@ import pandas as pd
 
 thresh=250
 
-coordPath = f'/home/nel/Desktop/Cali Cube/cali_{thresh}.csv'
+coordPath = f'/home/nel/Desktop/Behavior1027_cropped/cali_{thresh}.csv'
 # print camera labels and order to help with model and DLCPaths below
 model_options = pd.read_csv(coordPath).columns
 model_options = [opt[:-2] for opt in model_options[:-3][::2]]

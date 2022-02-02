@@ -134,14 +134,14 @@ def scatter(data, wheel_pt1, wheel_pt2, R, rot=False, save=False):
     plt.legend(handles=patches, loc='lower center', ncol = len(col_X))
 
     # plot paws
-    lpaw = data[[col for col in data.columns if col[0] == 'L' and col[-3] == 'w']]
-    rpaw = data[[col for col in data.columns if col[0] == 'R' and col[-3] == 'w']]
+    lpaw = data[[col for col in data.columns if col[:2] == 'FL' and col[-3] == 'w']]
+    rpaw = data[[col for col in data.columns if col[:2] == 'FR' and col[-3] == 'w']]
     ax.scatter(lpaw.iloc[:,0], lpaw.iloc[:,1], lpaw.iloc[:,2], color = 'blue', alpha = 0.1)
     ax.scatter(rpaw.iloc[:,0], rpaw.iloc[:,1], rpaw.iloc[:,2], color = 'red', alpha = 0.1)
 
-    # plot wheel
-    X, Y, Z = xyz_wheel(wheel_pt1, wheel_pt2, R)
-    ax.plot_surface(X, Y, Z, alpha = 0.1, color='k')
+    # # plot wheel
+    # X, Y, Z = xyz_wheel(wheel_pt1, wheel_pt2, R)
+    # ax.plot_surface(X, Y, Z, alpha = 0.1, color='k')
 
     if rot:
         # set view
@@ -167,10 +167,9 @@ def scatter(data, wheel_pt1, wheel_pt2, R, rot=False, save=False):
         pass
 
 #%% animate function
-def animate(fig, data, wheel_pt1, wheel_pt2, R, fps, save=False):
+def animate(data, wheel_pt1, wheel_pt2, R, fps, save=False):
     '''
     Animate all 3D reconstructed points    
-
     Parameters
     ----------
     data : pandas df
@@ -185,12 +184,10 @@ def animate(fig, data, wheel_pt1, wheel_pt2, R, fps, save=False):
         Framerate of animation.
     save : bool, optional
         Save animation. The default is False. 
-
     Returns
     -------
     anim : matplotlib FuncAnimation
         Animation of points.
-
     '''
     
     # find min/max for axes limits
@@ -199,14 +196,14 @@ def animate(fig, data, wheel_pt1, wheel_pt2, R, fps, save=False):
     col_Z = [col for col in data.columns if col[-1] == 'Z']
 
     edge = 10
-    Xlim = [-7.0132103916127555, 46.4446776830212]
-    Ylim = [-8.612098104740042, 57.039159875762536]
-    Zlim =  [-22.44768578790802, 10.927777604782086]
+    Xlim = [data[col_X].min().min()-edge, data[col_X].max().max()+edge]
+    Ylim = [data[col_Y].min().min()-edge, data[col_Y].max().max()+edge]
+    Zlim = [data[col_Z].min().min()-edge, data[col_Z].max().max()+edge]
 
     # set up figure
-    # fig = plt.figure()
-    ax = fig.add_subplot(224, projection='3d')
-    title = ax.set_title('Frame 1700 of 5999')
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    title = ax.set_title('Mouse Animation')
     ax.set_xlim(Xlim)
     ax.set_ylim(Ylim)
     ax.set_zlim(Zlim)
@@ -214,25 +211,25 @@ def animate(fig, data, wheel_pt1, wheel_pt2, R, fps, save=False):
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
 
-
+    # SET VIEW
+    # ax.view_init(30,270-45)
+    # ax.view_init(0,45)
+    ax.view_init(0,60)
 
     # degree vector for bouncing rotation
     factor = 5
     deg = 70*factor
     base = list(range(deg+1))+list(range(deg,-1,-1))
     base = [x/factor for x in base]
-    mult, extra = 6000//(len(base)), 6000%(len(base))
+    mult, extra = data.shape[0]//(len(base)), data.shape[0]%(len(base))
     deg_vec = base*mult + base[:extra]
-    
-        # SET VIEW
-    ax.view_init(30,270-45+deg_vec[1700])
     
     # hide axes
     ax.set_axis_off()
 
-    # plot wheel
-    X, Y, Z = xyz_wheel(wheel_pt1, wheel_pt2, R)
-    ax.plot_surface(X, Y, Z, color='white')
+    # # plot wheel
+    # X, Y, Z = xyz_wheel(wheel_pt1, wheel_pt2, R)
+    # ax.plot_surface(X, Y, Z, alpha = 0.1, color='k')
 
     # plot points
 
@@ -243,8 +240,8 @@ def animate(fig, data, wheel_pt1, wheel_pt2, R, fps, save=False):
         ax.lines=[]
 
         # define paw centers
-        lpx, lpy, lpz = df.loc[df.index.start+num,'Lpaw_X'], df.loc[df.index.start+num,'Lpaw_Y'], df.loc[df.index.start+num,'Lpaw_Z']
-        rpx, rpy, rpz = df.loc[df.index.start+num,'Rpaw_X'], df.loc[df.index.start+num,'Rpaw_Y'], df.loc[df.index.start+num,'Rpaw_Z']
+        lpx, lpy, lpz = df.loc[df.index.start+num,'FLpaw_X'], df.loc[df.index.start+num,'FLpaw_Y'], df.loc[df.index.start+num,'FLpaw_Z']
+        rpx, rpy, rpz = df.loc[df.index.start+num,'FRpaw_X'], df.loc[df.index.start+num,'FRpaw_Y'], df.loc[df.index.start+num,'FRpaw_Z']
 
         for i,bpart in enumerate(col_X):
             start = 3*i
@@ -255,32 +252,32 @@ def animate(fig, data, wheel_pt1, wheel_pt2, R, fps, save=False):
 
             # draw new lines (must use float)
             a, b, c = float(temp.x), float(temp.y), float(temp.z)
-            if bpart[:4].lower() == 'lpaw':
+            if bpart[:2].lower() == 'fl':
                 ax.plot3D([a, lpx], [b, lpy], [c, lpz], 'black')
-            elif bpart[:4].lower() == 'rpaw':
+            elif bpart[:2].lower() == 'fr':
                 ax.plot3D([a, rpx], [b, rpy], [c, rpz], 'black')
         
         # SET TITLE FOR EACH FRAME
         title.set_text('Frame {} of {}'.format(df.index.start+num, df.index.stop-1))
         
         # optional, use to rotate view while animating
-        ax.view_init(30,270-45+deg_vec[num])
+        # ax.view_init(30,270-45+deg_vec[num])
 
         return
 
     # plot initial points
 
     # define paw centers
-    lpx, lpy, lpz = data.loc[data.index.start,'Lpaw_X'], data.loc[data.index.start,'Lpaw_Y'], data.loc[data.index.start,'Lpaw_Z']
-    rpx, rpy, rpz = data.loc[data.index.start,'Rpaw_X'], data.loc[data.index.start,'Rpaw_Y'], data.loc[data.index.start,'Rpaw_Z']
+    lpx, lpy, lpz = data.loc[data.index.start,'FLpaw_X'], data.loc[data.index.start,'FLpaw_Y'], data.loc[data.index.start,'FLpaw_Z']
+    rpx, rpy, rpz = data.loc[data.index.start,'FRpaw_X'], data.loc[data.index.start,'FRpaw_Y'], data.loc[data.index.start,'FRpaw_Z']
 
     lpaw,rpaw,lpawc,rpawc,other = (False,)*5
     graph = []
     for x,bpart in enumerate(col_X):
-        if bpart[:4].lower() == 'lpaw': #and bpart[5].lower() == 'd':
+        if bpart[:2].lower() == 'fl': #and bpart[5].lower() == 'd':
             pcolor = 'blue'
             lpaw = True
-        elif bpart[:4].lower() == 'rpaw': #and bpart[5].lower() == 'd':
+        elif bpart[:2].lower() == 'fr': #and bpart[5].lower() == 'd':
             pcolor = 'red'
             rpaw = True
         # elif bpart[:4].lower() == 'lpaw' and bpart[5].lower() != 'd':
@@ -302,31 +299,43 @@ def animate(fig, data, wheel_pt1, wheel_pt2, R, fps, save=False):
 
         # draw lines (must use float)
         a, b, c = float(temp.x), float(temp.y), float(temp.z)
-        if bpart[:4].lower() == 'lpaw':
+        if bpart[:2].lower() == 'fl':
             ax.plot3D([a, lpx], [b, lpy], [c, lpz], 'black')
-        elif bpart[:4].lower() == 'rpaw':
+        elif bpart[:2].lower() == 'fr':
             ax.plot3D([a, rpx], [b, rpy], [c, rpz], 'black')
 
     # create legend
     patches = []
     if lpawc == True:
-        patch, = plt.plot([],[], marker="o", ls='', color='green', label='LPaw Center')
+        patch, = plt.plot([],[], marker="o", ls='', color='green', label='FLPaw Center')
         patches.append(patch)
     if lpaw == True:
-        patch, = plt.plot([],[], marker="o", ls='', color='blue', label='Left Paw')
+        patch, = plt.plot([],[], marker="o", ls='', color='blue', label='FLPaw')
         patches.append(patch)
     if rpawc == True:
-        patch, = plt.plot([],[], marker="o", ls='', color='orange', label='RPaw Center')
+        patch, = plt.plot([],[], marker="o", ls='', color='orange', label='FRPaw Center')
         patches.append(patch)
     if rpaw == True:
-        patch, = plt.plot([],[], marker="o", ls='', color='red', label='Right Paw')
+        patch, = plt.plot([],[], marker="o", ls='', color='red', label='FRPaw')
         patches.append(patch)
     if other == True:
         patch, = plt.plot([],[], marker="o", ls='', color='black', label='Unknown Part')
         patches.append(patch)
     
-    plt.legend(handles=patches, loc='upper center', ncol = 2)
+    plt.legend(handles=patches, loc='lower center', ncol = 2)
 
-
+    # run animation function @ fps (interval = 1000 ms/fps)
+    anim = FuncAnimation(fig, update, data.shape[0], interval=1000/fps, repeat=0, 
+                         fargs = (data, graph, col_X, deg_vec))    
     
-    return fig
+    # save
+    if isinstance(save, str):
+        anim.save(save,
+                  progress_callback = lambda i, n: print(f'Saving frame {i} of {n}') if i%100==0 else True)
+    elif save:
+        anim.save('3D_animation.mp4',
+                  progress_callback = lambda i, n: print(f'Saving frame {i} of {n}') if i%100==0 else True)
+    else:
+        pass
+
+    return anim

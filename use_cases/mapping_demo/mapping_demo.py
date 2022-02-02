@@ -52,7 +52,7 @@ DON'T FORGET TO UPDATE PATHS!
 
 
 
-coordPath = '/home/nel-lab/Software/Behavior3D/use_cases/mapping/demo_model_coordinates.csv'
+coordPath = '/home/nel/Desktop/Behavior1027_cropped/cali_250.csv'
 
 
 
@@ -62,7 +62,11 @@ model_options = [opt[:-2] for opt in model_options[:-3][::2]]
 print('Cameras labels to reference when defining model and DLCPaths variables below:\n', model_options)
 
 #%% setup - define model/DLC paths
-model = ['BOT','FL','FR']
+model = [
+    'BOT',
+    'FL',
+    'FR'
+    ]
 
 '''
 update paths to local paths in repo!
@@ -70,16 +74,65 @@ update paths to local paths in repo!
 
 
 
-DLCPaths = ['/home/nel-lab/Software/Behavior3D/use_cases/mapping/DLC_bot.csv',
-            '/home/nel-lab/Software/Behavior3D/use_cases/mapping/DLC_front_left.csv',
-            '/home/nel-lab/Software/Behavior3D/use_cases/mapping/DLC_front_right.csv']
+DLCPaths = [
+            '/home/nel/Desktop/Behavior1027_cropped/bot.csv',
+            '/home/nel/Desktop/Behavior1027_cropped/fl.csv',
+            '/home/nel/Desktop/Behavior1027_cropped/fr.csv',
+            # '/home/nel/Desktop/Behavior1027/bl.csv',
+            # '/home/nel/Desktop/Behavior1027/br.csv'
+            ]
 
-
-
-SVR_args = {'kernel':"poly", 'degree':2, 'C':1500}
+SVR_args = {'kernel':"rbf", 'C':15000}
 
 if not set(model).issubset(model_options):
     raise ValueError(f'One or more model entry is not a valid camera label {tuple(model_options)}.')
+
+#%% interpret low confidence points on 2D data
+# from bh3D.mapping import PreProcess_DLC_data
+# from scipy import interpolate
+
+# def interp(file):
+#     # read in csv
+#     df = pd.read_csv(file)
+    
+#     # preprocess (fill low confidence points with nan)
+#     df_proc = PreProcess_DLC_data(df, thresh=0.7, filt=False)
+    
+#     # init interp array
+#     interp = np.zeros_like(df_proc)
+    
+#     # for each trace, interpret over low confidence/nan values
+#     for i in range(df_proc.shape[1]):
+#         # copy trace
+#         series = df_proc.iloc[:,i].copy()
+#         if series.isna().all():
+#             pass
+#         else:
+#             # low confidence/nan mask
+#             nan_mask = series.isna()
+#             # high confidence/good mask
+#             good_mask = series.notnull()
+#             # interpolate function
+#             f = interpolate.interp1d(series[good_mask].index.values, series[good_mask],
+#                                      kind='cubic', fill_value='extrapolate')
+#             # interpolate over low confidence/nan values
+#             series[nan_mask] = f(series[nan_mask].index.values)
+#         # store in overall array
+#         interp[:,i] = series
+    
+#     # return interpolated df
+#     df_interp = pd.DataFrame(interp, columns=df_proc.columns)
+#     return df_interp
+
+# files = [
+#     '/home/nel/Desktop/Behavior1027_cropped/bot.csv',
+#     '/home/nel/Desktop/Behavior1027_cropped/fl.csv',
+#     '/home/nel/Desktop/Behavior1027_cropped/fr.csv',
+#     ]
+
+# DLCPaths = []
+# for i in files:
+#     DLCPaths.append(interp(i).dropna(axis=1))
 
 #%% init mapping class (automatically builds model)
 cal = mapping(model, coordPath, DLCPaths, **SVR_args)
@@ -93,8 +146,51 @@ plt.savefig('/home/nel-lab/Software/Behavior3D/paper_figs/cali_results_train_tes
 
 #%% map DLC data to 3D (also filters data)
 data = cal.map_to_3D()
-# save 3D reconstruction as csv
-# data.to_csv('path/to/use_cases/mapping_demo/bh3D_demo_recon.csv', index=False)
+
+#%% drop head/back/tail and back paws
+# data.drop(columns = [col for col in data.columns if (col[0].islower())|(col[0] == 'B')|(col[1] == 'L')], inplace=True)
+data.drop(columns = [col for col in data.columns if (col[0].islower())|(col[0] == 'B')], inplace=True)
+
+#%% map each paw seperate
+fl_all = mapping(['BOT', 'FL'], coordPath, ['/home/nel/Desktop/Behavior1027_cropped/bot.csv','/home/nel/Desktop/Behavior1027_cropped/fl.csv'], **SVR_args).map_to_3D()
+fl = fl_all[[c for c in fl_all.columns if 'FL' in c]]
+
+fr_all = mapping(['BOT', 'FR'], coordPath, ['/home/nel/Desktop/Behavior1027_cropped/bot.csv','/home/nel/Desktop/Behavior1027_cropped/fr.csv'], **SVR_args).map_to_3D()
+fr = fr_all[[c for c in fr_all.columns if 'FR' in c]]
+
+data = pd.concat([fl, fr], axis=1)
+
+
+#%% save 3D reconstruction as csv
+# data.to_csv('/home/nel/Desktop/Cali Cube/recon.csv', index=False)
+
+#%% investigate head point
+# import matplotlib.pyplot as plt
+# head = data[['head_X', 'head_Y','head_Z']]
+# print(head.max()-head.min())
+# fig = plt.figure()
+# ax = fig.add_subplot(projection='3d')
+# ax.scatter(head.iloc[:,0], head.iloc[:,1], head.iloc[:,2])
+
+#%% let's do this the hard way... - WIP!!!
+# fig = plt.figure()
+# ax = fig.add_subplot(projection='3d')
+
+# for i in range(10):
+#     ax.set_title(f'frame number {i}')
+#     plt.cla()
+#     # ax.set_xlim([0,100])
+#     # ax.set_ylim([0,100])
+#     # ax.set_zlim([0,100])
+#     # ax.scatter(data.loc[i, 'FLpaw_X'], data.loc[i, 'FLpaw_Y'], data.loc[i, 'FLpaw_Z'], color='blue')
+#     ax.scatter(data.loc[i, 'FRpaw_X'], data.loc[i, 'FRpaw_Y'], data.loc[i, 'FRpaw_Z'], color='black')
+#     ax.scatter(data.loc[i, 'FRdig1_X'], data.loc[i, 'FRdig1_Y'], data.loc[i, 'FRdig1_Z'], color='red')
+#     ax.scatter(data.loc[i, 'FRdig2_X'], data.loc[i, 'FRdig2_Y'], data.loc[i, 'FRdig2_Z'], color='red')
+#     ax.scatter(data.loc[i, 'FRdig3_X'], data.loc[i, 'FRdig3_Y'], data.loc[i, 'FRdig3_Z'], color='red')
+#     ax.scatter(data.loc[i, 'FRdig4_X'], data.loc[i, 'FRdig4_Y'], data.loc[i, 'FRdig4_Z'], color='red')
+#     plt.pause(0.5)
+    
+# plt.cla()
 
 #%% use mapping to generate figures/animations
 '''
@@ -121,8 +217,8 @@ A quick google search of any errors you may encounter when saving can usually
 point you in the right direction to solve the issue.
 '''
 #%% define wheel endpoints and radius for plotting
-lpt = data[[col for col in data.columns if col[0] == 'L' and col[-3] == 'w']]
-rpt = data[[col for col in data.columns if col[0] == 'R' and col[-3] == 'w']]
+lpt = data[[col for col in data.columns if col[:2] == 'FL' and col[-3] == 'w']]
+rpt = data[[col for col in data.columns if col[:2] == 'FR' and col[-3] == 'w']]
 lmean = lpt.mean().to_numpy()
 rmean = rpt.mean().to_numpy()
 mean = np.row_stack([lmean,rmean])
@@ -130,7 +226,7 @@ mean = np.mean(mean, axis=0)
 R = 216/2
 L = 89
 mean[0] += -1.5
-mean[2] += -R-10
+mean[2] += -R+1
 mean[1] += 27
 pt1 = mean.copy()
 pt2 = mean.copy()
@@ -139,7 +235,7 @@ pt2[0] += L/2
 pt1[2] += 4
 
 #%% cumulative plot of paw points
-data = pd.read_csv('/Users/jimmytabet/Software/Behavior3D/use_cases/mapping_demo/bh3D_demo_recon.csv')
+utils.scatter(data=data, wheel_pt1=pt1, wheel_pt2=pt2, R=R, rot=False, save=False)
 
 #%% animation
-onet = utils.animate(plt.figure(), data=data.iloc[1699:1700], wheel_pt1=pt1, wheel_pt2=pt2, R=R, fps=70, save=False)
+utils.animate(data=data, wheel_pt1=pt1, wheel_pt2=pt2, R=R, fps=70, save='/home/nel/Desktop/anim.mp4')

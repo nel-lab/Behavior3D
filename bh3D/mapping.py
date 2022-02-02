@@ -25,11 +25,47 @@ from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
-from scipy.signal import medfilt
+from scipy.signal import medfilt, savgol_filter
 from scipy import interpolate
 
 #%% functions
-def PreProcess_DLC_data(df):
+def simple_filter(df):
+    '''
+    Filter 3D reconstruction to smooth points.
+
+    Parameters
+    ----------
+    df : pandas df
+        Dataframe to be filtered.
+
+    Returns
+    -------
+    df_filter : pandas df
+        Filtered dataframe.
+
+    '''
+    
+    Predictions = df.to_numpy()
+
+    ids = np.arange(0,Predictions.shape[-1])
+    PredictionsFilt3 = medfilt(Predictions, kernel_size=(3,1))[:,ids]
+    PredictionsFilt9 = medfilt(Predictions, kernel_size=(9,1))[:,ids]
+
+    tol_pix = 6
+    count = 0
+    for filt3, filt9 in zip(PredictionsFilt3.T,PredictionsFilt9.T):
+        PredictionOutl = np.where(np.abs(filt3-filt9)>tol_pix)[0]
+        PredictionGood = np.where(np.abs(filt3-filt9)<tol_pix)[0]
+        f = interpolate.interp1d(PredictionGood,filt3[PredictionGood], kind='cubic', fill_value='extrapolate')
+        filt3[PredictionOutl]=f(PredictionOutl)
+        Predictions[:,count] = filt3
+        count+=1
+
+    df_filter = pd.DataFrame(Predictions, columns=df.columns)
+
+    return df_filter
+
+def PreProcess_DLC_data(df, thresh = 0.9, filt = 'sav'):
     '''
     Preprocesses DLC dfs.
 
@@ -51,12 +87,38 @@ def PreProcess_DLC_data(df):
     
     df_proc = df.iloc[2:,1:]
     
+    df_proc = df_proc.astype(float).reset_index(drop=1)
+
+    if thresh:
+        # iterate through body parts
+        for bp in range(df_proc.shape[1]//3):
+            # iterate through frames
+            for frame in range(df_proc.shape[0]):        
+                # init best_x/y in first frame
+                if frame==0:
+                    best_x, best_y = df_proc.iloc[0, 3*bp:3*bp+2]
+        
+                # if likelihood is below THRESH, replace DLC prediction with best_x/y
+                li = df_proc.iloc[frame, 3*bp+2]
+                if li < thresh:
+                    df_proc.iloc[frame, 3*bp:3*bp+2] = best_x, best_y
+                else:
+                    best_x, best_y = df_proc.iloc[frame, 3*bp:3*bp+2]
+
     # remove likelihood values
     li_columns = [col for col in df_proc.columns if 'likelihood' in col]
     df_proc = df_proc.drop(columns=li_columns)
-
-    df_proc = df_proc.astype(float).reset_index(drop=1)
         
+    if filt == 'sav':
+        for bp in range(df_proc.shape[1]):
+            dat = df_proc.iloc[:,bp]
+            filt_dat = savgol_filter(dat, 5, 3)
+            df_proc.iloc[:,bp] = filt_dat
+    elif filt == 'simp':
+        df_proc = simple_filter(df_proc)
+    else:
+        pass
+    
     return df_proc
 
 def Standardize_columns(dfs):
@@ -165,42 +227,6 @@ def Predict_Real_Coordinates(dfs, bodyparts, numCameras, regr):
         Predictions[:,3*i:(3*i+3)] = regr.predict(test_data[:,columns*i:(columns*i+columns)])
         
     return Predictions
-
-def simple_filter(df):
-    '''
-    Filter 3D reconstruction to smooth points.
-
-    Parameters
-    ----------
-    df : pandas df
-        Dataframe to be filtered.
-
-    Returns
-    -------
-    df_filter : pandas df
-        Filtered dataframe.
-
-    '''
-    
-    Predictions = df.to_numpy()
-
-    ids = np.arange(0,Predictions.shape[-1])
-    PredictionsFilt3 = medfilt(Predictions, kernel_size=(3,1))[:,ids]
-    PredictionsFilt9 = medfilt(Predictions, kernel_size=(9,1))[:,ids]
-
-    tol_pix = 6
-    count = 0
-    for filt3, filt9 in zip(PredictionsFilt3.T,PredictionsFilt9.T):
-        PredictionOutl = np.where(np.abs(filt3-filt9)>tol_pix)[0]
-        PredictionGood = np.where(np.abs(filt3-filt9)<tol_pix)[0]
-        f = interpolate.interp1d(PredictionGood,filt3[PredictionGood], kind='cubic')
-        filt3[PredictionOutl]=f(PredictionOutl)
-        Predictions[:,count] = filt3
-        count+=1
-
-    df_filter = pd.DataFrame(Predictions, columns=df.columns)
-
-    return df_filter
 
 #%% calibration class
 class mapping():
@@ -399,11 +425,14 @@ class mapping():
         # input: path to coordinate csv, path to folder containing DLC csvs, list of model IDs as strings ['fl'/'fr'/'bot']
            
         # preproccess and pull DLC data based on model
-        dfs = []
-        for path in self.DLCpaths:
-            df = pd.read_csv(path)
-            mod_df = PreProcess_DLC_data(df)
-            dfs.append(mod_df)
+        if all(isinstance(i, str) for i in self.DLCpaths): 
+            dfs = []
+            for path in self.DLCpaths:
+                df = pd.read_csv(path)
+                mod_df = PreProcess_DLC_data(df)
+                dfs.append(mod_df)
+        else:
+            dfs = self.DLCpaths
 
         # standardize dfs
         dfs_stand, columns = Standardize_columns(dfs)
