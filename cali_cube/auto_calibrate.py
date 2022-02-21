@@ -11,7 +11,7 @@ Created on Sun Jan  3 01:13:22 2021
 import numpy as np
 import matplotlib.pyplot as plt
 
-dat = np.load('/home/nel/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/calicube_10_28.npz')
+dat = np.load('/home/nel/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/cali0215_1.npz')
 mov = dat['movie']
 maxs = np.max(mov, axis=(2,3))
 
@@ -46,6 +46,7 @@ max_maxs = maxs1[max_frames]
 
 #%% EXPLORE
 #%% set cam and thresh for EDA
+num_cam = max_mov.shape[1]
 cam = 0
 thresh = 250
 
@@ -83,7 +84,7 @@ temp_mov.fr = fps
 temp_mov.save('/home/nel/Desktop/Cali Cube/temp.avi')
 
 #%% see drop off in number of frames with max > thresh
-for cam in range(5):
+for cam in range(num_cam):
     lower = []
     for i in np.arange(256):
         lower.append(np.sum(max_maxs[:,cam]<=i))
@@ -118,64 +119,64 @@ plt.ylim([0,480])
 
 #%% CREATE CSV
 #%% create generic ground truth array
-# real = np.zeros([8**3,3])
-# row = 0
-# for z in range(8):
-#     for y in range(8):
-#         for x in range(8):
-#             real[row,:] = [x,y,z]
-#             row +=1
-            
-# # convert inches to mm
-# real *= 25.4
-
-#%% create rotated ground truth array
-# rotate 45 degrees counterclockwise
-rot = np.array([[2**-.5, -2**-.5, 0],
-                [2**-.5,  2**-.5, 0],
-                [     0,       0, 1]])
-
-# create ground truth array
-# number of points per side
-n = 8
-# init array
-real = np.zeros([n**3,3])
-# init row counter
+real = np.zeros([8**3,3])
 row = 0
-
-# calibration cube chages as follows: y axis, z axis, x axis
-for x in range(n):
-    # reverse z axis (cube is orientated down)
-    for z in reversed(range(n)):
-        for y in range(n):
-            # add point to real array
+for z in range(8):
+    for y in range(8):
+        for x in range(8):
             real[row,:] = [x,y,z]
-            # increment row
             row +=1
-
-# rotate points
-real = real@rot
-
+            
 # convert inches to mm
 real *= 25.4
 
-# view rotated ground truth array
-fig = plt.figure()
-ax = fig.add_subplot(projection='3d')
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.set_zlabel('z')
-x,y,z = real[:,0], real[:,1], real[:,2]
-ax.scatter(x[0], y[0], z[0], c='r', label='origin')
-ax.scatter(x[1:], y[1:], z[1:])
-ax.quiver(x[:-1], y[:-1], z[:-1], np.diff(x), np.diff(y), np.diff(z), length = 0.5)
-plt.legend()
+#%% create rotated ground truth array
+# # rotate 45 degrees counterclockwise
+# rot = np.array([[2**-.5, -2**-.5, 0],
+#                 [2**-.5,  2**-.5, 0],
+#                 [     0,       0, 1]])
+
+# # create ground truth array
+# # number of points per side
+# n = 8
+# # init array
+# real = np.zeros([n**3,3])
+# # init row counter
+# row = 0
+
+# # calibration cube chages as follows: y axis, z axis, x axis
+# for x in range(n):
+#     # reverse z axis (cube is orientated down)
+#     for z in reversed(range(n)):
+#         for y in range(n):
+#             # add point to real array
+#             real[row,:] = [x,y,z]
+#             # increment row
+#             row +=1
+
+# # rotate points
+# real = real@rot
+
+# # convert inches to mm
+# real *= 25.4
+
+# # view rotated ground truth array
+# fig = plt.figure()
+# ax = fig.add_subplot(projection='3d')
+# ax.set_xlabel('x')
+# ax.set_ylabel('y')
+# ax.set_zlabel('z')
+# x,y,z = real[:,0], real[:,1], real[:,2]
+# ax.scatter(x[0], y[0], z[0], c='r', label='origin')
+# ax.scatter(x[1:], y[1:], z[1:])
+# ax.quiver(x[:-1], y[:-1], z[:-1], np.diff(x), np.diff(y), np.diff(z), length = 0.5)
+# plt.legend()
 
 #%% create array of location of pixel > thresh for all cams
 #   nan value if below thresh
 thresh = 250
 big = np.zeros([8**3,10])
-for cam in range(5):
+for cam in range(num_cam):
     for frame in range(8**3):
         if max_maxs[frame,cam]>=thresh:
             max_pt = np.mean(np.argwhere(max_mov[frame,cam] == max_maxs[frame,cam]), axis=0)
@@ -190,7 +191,7 @@ final = np.hstack([big, real])
 
 #%% plot original points in each camera
 # fig = plt.figure()
-# for i in range(5):
+# for i in range(num_cam):
 #     ax = plt.subplot(2,3,i+1)
 #     ax.plot(final[:,2*i],final[:,2*i+1],'o')
     
@@ -222,10 +223,10 @@ final_df.dropna(inplace = True)
 
 print(final_df.shape)
 
-final_df.to_csv(f'/home/nel/Desktop/Behavior1027_cropped/cali_{thresh}.csv', index=False)
+final_df.to_csv(f'/home/nel/Desktop/0215cali_{thresh}.csv', index=False)
 
 #%% plot imputed points in each camera
-# for i in range(5):
+# for i in range(num_cam):
 #     ax = plt.subplot(2,3,i+1)
 #     ax.plot(final[:,2*i],final[:,2*i+1],'.')
     
@@ -235,7 +236,7 @@ import pandas as pd
 
 thresh=250
 
-coordPath = f'/home/nel/Desktop/Behavior1027_cropped/cali_{thresh}.csv'
+coordPath = f'/home/nel/Desktop/0215cali_{thresh}.csv'
 # print camera labels and order to help with model and DLCPaths below
 model_options = pd.read_csv(coordPath).columns
 model_options = [opt[:-2] for opt in model_options[:-3][::2]]
