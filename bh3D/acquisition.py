@@ -13,9 +13,9 @@ import numpy as np
 import time
 
 # init cameras
-num_cameras = 5
+num_cameras = 3
 camera_fps = 70 # 50 for cali cube
-num_frames = 5*60*camera_fps # 2 for cali cube
+num_frames = 2*60*camera_fps # 2 for cali cube
 c = Camera(list(range(num_cameras)),
            fps=[camera_fps]*num_cameras,
            resolution=[Camera.RES_LARGE]*num_cameras,
@@ -23,9 +23,9 @@ c = Camera(list(range(num_cameras)),
 
 #%% acquisition
 # user settings
-mouse = 2
+mouse = 23
 trial = 1
-file_name = f'/home/nel-lab/Desktop/Sophia/0203/mouse{mouse}_trial{trial}'
+file_name = f'/home/nel-lab/Desktop/Sophia/0316/mouse{mouse}_trial{trial}'
 
 set_cam = True
 record = True

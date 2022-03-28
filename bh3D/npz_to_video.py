@@ -42,7 +42,7 @@ def save_video(file_name, movie, f_rate):
     video.release()
     
 #%% load video
-fil = '/home/nel-lab/Desktop/Sophia/0203/mouse16_trial1.npz'
+fil = '/home/nel-lab/Desktop/Sophia/0310/mouse2_trial4.npz'
 
 movie = np.load(fil)['movie']
 num_cameras = movie.shape[1]
@@ -69,7 +69,8 @@ plt.close('all')
 #%% save all videos
 camera_fps = 70
 
-cam_labels = ['bot','br','fr','fl','bl']
+# cam_labels = ['bot','br','fr','fl','bl']
+cam_labels = ['bot','fl','fr']
 
 file_names = [f'{os.path.splitext(fil)[0]}_{lab}.avi' for lab in cam_labels]
 
