@@ -11,7 +11,7 @@ Created on Sun Jan  3 01:13:22 2021
 import numpy as np
 import matplotlib.pyplot as plt
 
-dat = np.load('/home/nel/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/cali0215_1.npz')
+dat = np.load('/home/nel/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/0316_m23/cali23_trial0.npz')
 mov = dat['movie']
 maxs = np.max(mov, axis=(2,3))
 
@@ -25,7 +25,7 @@ t_total = t_on+t_off
 
 #%% shorten movie
 # start = first frame where *a* camera's pixel is at max (usually 255)
-start = np.argwhere(maxs==maxs.max())[0][0]
+start = np.argwhere(maxs==maxs.max())[2][0] # first index is frame, second index is camera number
 
 # end = frame number after lighting all LEDs (8^3 * t_total)
 end = int(start+8**3*t_total)
@@ -175,7 +175,7 @@ real *= 25.4
 #%% create array of location of pixel > thresh for all cams
 #   nan value if below thresh
 thresh = 250
-big = np.zeros([8**3,10])
+big = np.zeros([8**3,2*num_cam])
 for cam in range(num_cam):
     for frame in range(8**3):
         if max_maxs[frame,cam]>=thresh:
@@ -201,7 +201,7 @@ final = np.hstack([big, real])
 
 #%% handle nan values (drop/impute) and save as csv for BH3D code
 # drop row if > num_cam cameras have nan value, then iterate over nans
-num_cam_missing = 1
+num_cam_missing = 0
 final = final[np.isnan(final).sum(axis=1) <= num_cam_missing*2]
 
 # impute over remianing nan values
@@ -212,8 +212,10 @@ final = imp.fit_transform(final)
 
 # create df with correct camera columns
 import pandas as pd
-final_df = pd.DataFrame(final, columns = ['BOT_x', 'BOT_y', 'BR_x', 'BR_y', 'FR_x', 'FR_y', 'FL_x', 'FL_y',
-       'BL_x', 'BL_y', 'X', 'Y', 'Z'])
+# FOR 5 CAMERAS
+# final_df = pd.DataFrame(final, columns = ['BOT_x', 'BOT_y', 'BR_x', 'BR_y', 'FR_x', 'FR_y', 'FL_x', 'FL_y', 'BL_x', 'BL_y', 'X', 'Y', 'Z'])
+# FOR 3 CAMERAS
+final_df = pd.DataFrame(final, columns = ['BOT_x', 'BOT_y', 'FL_x', 'FL_y', 'FR_x', 'FR_y', 'X', 'Y', 'Z'])
 
 # drop all remaining nans for final csv
 final_df.dropna(inplace = True)
@@ -223,7 +225,7 @@ final_df.dropna(inplace = True)
 
 print(final_df.shape)
 
-final_df.to_csv(f'/home/nel/Desktop/0215cali_{thresh}.csv', index=False)
+final_df.to_csv(f'/home/nel/Desktop/0316cali_{thresh}_{num_cam_missing}missing.csv', index=False)
 
 #%% plot imputed points in each camera
 # for i in range(num_cam):
@@ -236,7 +238,7 @@ import pandas as pd
 
 thresh=250
 
-coordPath = f'/home/nel/Desktop/0215cali_{thresh}.csv'
+coordPath = f'/home/nel/Desktop/0316cali_{thresh}_0missing.csv'
 # print camera labels and order to help with model and DLCPaths below
 model_options = pd.read_csv(coordPath).columns
 model_options = [opt[:-2] for opt in model_options[:-3][::2]]
