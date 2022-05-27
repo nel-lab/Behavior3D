@@ -11,7 +11,7 @@ Created on Sun Jan  3 01:13:22 2021
 import numpy as np
 import matplotlib.pyplot as plt
 
-dat = np.load('C:/Users/sophi/Downloads/calicube_10_28.npz')
+dat = np.load('/home/nel/NEL-LAB Dropbox/NEL/Datasets/Behavior3D/calicube.npz')
 # data is video of the cube lighting up in form of npz file
 mov = dat['movie']
 # shape = (6000, 5, 480, 640) 480 and 640 are dimensions of image for each frame
@@ -78,6 +78,15 @@ max_maxs = maxs1[max_frames] #max pixel values for each camera
 cam = 0
 thresh = 250
 
+#%% create movie to check/validate
+import caiman as cm
+
+for i in range (5):
+    cm_mov = cm.movie(max_mov[:,i])
+    cm_mov.fr = fps
+    cm_mov.save(f'/home/nel/Desktop/Cali Cube/{i}.avi')
+
+#%% see max values for cam
 #%% see max values for cam (chosen cam)
 #think about how the LED moves through the cube, there are 512 LEDs and each camera is going to pick up different visual
 # Ex, top camera may not be able to see LED lighting up way at bottom, low pixel val.
@@ -110,6 +119,14 @@ while i < 10:
         plt.pause(0.5)
         i += 1
     frame += 1
+
+#%% save cm movie of frames where max < thresh
+temp = np.where(max_maxs[:,cam] <= thresh)[0]
+print(temp.shape)
+
+temp_mov = cm.movie(max_mov[temp,cam])
+temp_mov.fr = fps
+temp_mov.save('/home/nel/Desktop/Cali Cube/temp.avi')
 
 #%% see drop off in number of frames with max > thresh should see bright
 # this also can help with determining a threshold value
@@ -260,7 +277,7 @@ final = np.hstack([big, real])
 
 #%% handle nan values (drop/impute) and save as csv for BH3D code
 # drop row (frame) if > num_cam cameras have nan value, then iterate over nans
-#dro if there are more nan values in the row than num_cam cameras
+#drop if there are more nan values in the row than num_cam cameras
 
 num_cam_missing = 1
 
@@ -299,7 +316,7 @@ print('final dataframe shape is', final_df.shape)
 
 #save csv to computer
 #critical line for cali output
-final_df.to_csv(f'C:/Users/sophi/Downloads/Data/cali_{thresh}.csv', index=False)
+final_df.to_csv(f'/home/nel/Desktop/Cali Cube/cali_{thresh}.csv', index=False)
 
 #%% plot imputed points in each camera
 # for i in range(5):
@@ -313,13 +330,13 @@ import pandas as pd
 thresh=250
 
 #access csv
-coordPath = (f'C:/Users/sophi/Downloads/Data/cali_{thresh}.csv')
+coordPath = f'/home/nel/Desktop/Cali Cube/cali_{thresh}.csv'
 
 # print camera labels and order to help with model and DLCPaths below
 model_options = pd.read_csv(coordPath).columns
 model_options = [opt[:-2] for opt in model_options[:-3][::2]]
 #index, [:-3][::2] cuts off laast 3 values, then prints every other value
-#print('Cameras labels to reference when defining model and DLCPaths variables below:\n', model_options)
+print('Cameras labels to reference when defining model and DLCPaths variables below:\n', model_options)
 
 #%% run calibration
 # need 2 cameras at minimum, 
