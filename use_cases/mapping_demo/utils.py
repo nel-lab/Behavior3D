@@ -125,10 +125,10 @@ def scatter(data, wheel_pt1, wheel_pt2, R, rot=False, save=False):
     # create legend
     patches = []
     # patch for left paw
-    l_patch, = plt.plot([],[], marker="o", ls='', color='red', label='LPaw')
+    l_patch, = plt.plot([],[], marker="o", ls='', color='blue', label='Left Paw')
     patches.append(l_patch)
     # patch for right paw
-    r_patch, = plt.plot([],[], marker="o", ls='', color='blue', label='RPaw')
+    r_patch, = plt.plot([],[], marker="o", ls='', color='red', label='Right Paw')
     patches.append(r_patch)
     
     plt.legend(handles=patches, loc='lower center', ncol = len(col_X))
@@ -136,8 +136,8 @@ def scatter(data, wheel_pt1, wheel_pt2, R, rot=False, save=False):
     # plot paws
     lpaw = data[[col for col in data.columns if col[0] == 'L' and col[-3] == 'w']]
     rpaw = data[[col for col in data.columns if col[0] == 'R' and col[-3] == 'w']]
-    ax.scatter(lpaw.iloc[:,0], lpaw.iloc[:,1], lpaw.iloc[:,2], color = 'red', alpha = 0.1)
-    ax.scatter(rpaw.iloc[:,0], rpaw.iloc[:,1], rpaw.iloc[:,2], color = 'blue', alpha = 0.1)
+    ax.scatter(lpaw.iloc[:,0], lpaw.iloc[:,1], lpaw.iloc[:,2], color = 'blue', alpha = 0.1)
+    ax.scatter(rpaw.iloc[:,0], rpaw.iloc[:,1], rpaw.iloc[:,2], color = 'red', alpha = 0.1)
 
     # plot wheel
     X, Y, Z = xyz_wheel(wheel_pt1, wheel_pt2, R)
@@ -276,10 +276,10 @@ def animate(data, wheel_pt1, wheel_pt2, R, fps, save=False):
     graph = []
     for x,bpart in enumerate(col_X):
         if bpart[:4].lower() == 'lpaw': #and bpart[5].lower() == 'd':
-            pcolor = 'red'
+            pcolor = 'blue'
             lpaw = True
         elif bpart[:4].lower() == 'rpaw': #and bpart[5].lower() == 'd':
-            pcolor = 'blue'
+            pcolor = 'red'
             rpaw = True
         # elif bpart[:4].lower() == 'lpaw' and bpart[5].lower() != 'd':
         #     pcolor = 'green'
@@ -311,13 +311,13 @@ def animate(data, wheel_pt1, wheel_pt2, R, fps, save=False):
         patch, = plt.plot([],[], marker="o", ls='', color='green', label='LPaw Center')
         patches.append(patch)
     if lpaw == True:
-        patch, = plt.plot([],[], marker="o", ls='', color='red', label='LPaw')
+        patch, = plt.plot([],[], marker="o", ls='', color='blue', label='Left Paw')
         patches.append(patch)
     if rpawc == True:
         patch, = plt.plot([],[], marker="o", ls='', color='orange', label='RPaw Center')
         patches.append(patch)
     if rpaw == True:
-        patch, = plt.plot([],[], marker="o", ls='', color='blue', label='RPaw')
+        patch, = plt.plot([],[], marker="o", ls='', color='red', label='Right Paw')
         patches.append(patch)
     if other == True:
         patch, = plt.plot([],[], marker="o", ls='', color='black', label='Unknown Part')

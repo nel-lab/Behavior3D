@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 from sklearn.svm import SVR
 from sklearn.multioutput import MultiOutputRegressor
 from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import train_test_split
 
 from scipy.signal import medfilt
 from scipy import interpolate
@@ -338,17 +339,32 @@ class mapping():
         X = All_Data.iloc[:,:-3]
         y = All_Data.iloc[:,-3:]
             
-        preds = self.regr_model.predict(X)
-        
-        R2 = self.regr_model.score(X, y)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+
+        preds = self.regr_model.predict(X_test)
+ 
+        # preds_train = self.regr_model.predict(X_train)
+ 
+        preds_all = self.regr_model.predict(X)
+         
+        print(f'train points = {len(X_train)}')
+        print(f'test points = {len(X_test)}')
+
+        R2 = self.regr_model.score(X_test, y_test)
         print(f'Model R^2: {R2}')
-        MSE = mean_squared_error(y, preds)
+        MSE = mean_squared_error(y_test, preds)
         print(f'Model MSE: {MSE}')
 
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(preds[:,0], preds[:,1], preds[:,2], color = 'blue', label = 'pred')
-        ax.scatter(All_Data.iloc[:,-3], All_Data.iloc[:,-2], All_Data.iloc[:,-1], color = 'red', label = 'real')
+        
+        s = 20
+        a = 0.6
+
+        ax.scatter(y.iloc[:,0], y.iloc[:,1], y.iloc[:,2], s=s, color = 'red', label = 'real', alpha=a)
+        ax.scatter(preds_all[:,0], preds_all[:,1], preds_all[:,2], s=s, color = 'blue', label = 'fitted', alpha=a)
+        ax.scatter(preds[:,0], preds[:,1], preds[:,2], s=5*s, facecolors='none', color = 'k', label = 'predicted\n(test points)', alpha=1)
+        
         ax.set_title('Calibration Results')
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
